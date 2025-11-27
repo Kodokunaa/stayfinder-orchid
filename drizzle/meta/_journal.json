@@ -43,6 +43,13 @@
       "when": 1764215792069,
       "tag": "0005_light_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1764216345681,
+      "tag": "0006_cloudy_master_mold",
+      "breakpoints": true
     }
   ]
 }
