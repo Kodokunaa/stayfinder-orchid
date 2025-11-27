@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { listings } from '@/db/schema';
-import { eq, and, gte, lte, like, or, desc } from 'drizzle-orm';
+import { eq, and, gte, lte, like, or, desc, sql } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -205,23 +205,20 @@ export async function POST(request: NextRequest) {
     }
 
     const timestamp = new Date().toISOString();
+    const imagesJson = JSON.stringify(images);
 
+    // Use raw SQL to bypass Drizzle's id field issue
+    const result = await db.run(
+      sql`INSERT INTO listings (title, description, price_per_night, num_guests, num_bedrooms, num_beds, num_bathrooms, images, user_id, status, created_at, updated_at)
+          VALUES (${title.trim()}, ${description.trim()}, ${pricePerNight}, ${numGuests}, ${numBedrooms}, ${numBeds}, ${numBathrooms}, ${imagesJson}, ${userId}, 'available', ${timestamp}, ${timestamp})`
+    );
+
+    // Fetch the newly created listing
     const newListing = await db
-      .insert(listings)
-      .values({
-        title: title.trim(),
-        description: description.trim(),
-        pricePerNight,
-        numGuests,
-        numBedrooms,
-        numBeds,
-        numBathrooms,
-        images: JSON.stringify(images),
-        userId,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      })
-      .returning();
+      .select()
+      .from(listings)
+      .where(eq(listings.id, result.lastInsertRowid as number))
+      .limit(1);
 
     return NextResponse.json(newListing[0], { status: 201 });
   } catch (error) {

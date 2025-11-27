@@ -27,6 +27,38 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
   });
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+
+  // Get user ID from session on mount
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const sessionToken = localStorage.getItem('session_token');
+      if (!sessionToken) {
+        toast.error('Please log in to manage listings');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionToken }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserId(data.user.id);
+        } else {
+          toast.error('Session expired. Please log in again.');
+        }
+      } catch (error) {
+        console.error('Error verifying session:', error);
+        toast.error('Failed to verify session');
+      }
+    };
+
+    fetchUserId();
+  }, []);
 
   useEffect(() => {
     if (listing) {
@@ -57,6 +89,11 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!userId) {
+      toast.error('User session not found. Please log in again.');
+      return;
+    }
+
     if (images.length === 0) {
       toast.error('Please add at least one image');
       return;
@@ -74,7 +111,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
         numBeds: parseInt(formData.numBeds),
         numBathrooms: parseInt(formData.numBathrooms),
         images,
-        userId: 1, // Default to admin user
+        userId: userId,
       };
 
       const url = listing ? `/api/listings?id=${listing.id}` : '/api/listings';
@@ -212,7 +249,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
             <Button type="button" variant="outline" onClick={() => onClose(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || images.length === 0}>
+            <Button type="submit" disabled={loading || images.length === 0 || !userId}>
               {loading ? 'Saving...' : listing ? 'Update Listing' : 'Create Listing'}
             </Button>
           </div>
