@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Receipt } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
 
 interface Booking {
   id: number;
@@ -36,24 +37,87 @@ interface Transaction {
   bookingId?: number | null;
 }
 
+interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 export default function MyBookingsPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
 
-  // Use default user ID 1
-  const DEFAULT_USER_ID = 1;
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const sessionToken = localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        toast.error('Please log in to view your bookings');
+        router.push('/login?redirect=/my-bookings');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/verify-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionToken }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        } else {
+          toast.error('Session expired. Please log in again.');
+          router.push('/login?redirect=/my-bookings');
+        }
+      } catch (error) {
+        console.error('Error verifying session:', error);
+        toast.error('Authentication error');
+        router.push('/login?redirect=/my-bookings');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
+    if (!user) return;
+
     fetchBookings();
     fetchTransactions();
-  }, []);
+
+    // Refetch data when page becomes visible (e.g., after navigation back)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBookings();
+        fetchTransactions();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup listener
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
 
   const fetchBookings = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      const response = await fetch(`/api/bookings?userId=${DEFAULT_USER_ID}`);
+      const response = await fetch(`/api/bookings?userId=${user.id}`);
       const bookingsData = await response.json();
       
       // Fetch listing details for each booking
@@ -83,9 +147,11 @@ export default function MyBookingsPage() {
   };
 
   const fetchTransactions = async () => {
+    if (!user) return;
+    
     try {
       setTransactionsLoading(true);
-      const response = await fetch(`/api/transactions?userId=${DEFAULT_USER_ID}&limit=50`);
+      const response = await fetch(`/api/transactions?userId=${user.id}&limit=50`);
       
       if (response.ok) {
         const data = await response.json();
@@ -133,7 +199,7 @@ export default function MyBookingsPage() {
     });
   };
 
-  if (loading) {
+  if (!user || loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
