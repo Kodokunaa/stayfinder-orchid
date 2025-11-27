@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -26,8 +28,11 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
     if (formData.password !== formData.confirmPassword) {
+      const errorMsg = 'Passwords do not match. Please make sure both passwords are the same.';
+      setError(errorMsg);
       toast.error('Passwords do not match', {
         description: 'Please make sure both passwords are the same.',
       });
@@ -35,8 +40,10 @@ export default function RegisterPage() {
     }
 
     if (formData.password.length < 8) {
+      const errorMsg = 'Password must be at least 8 characters long.';
+      setError(errorMsg);
       toast.error('Password too short', {
-        description: 'Password must be at least 8 characters long.',
+        description: errorMsg,
       });
       return;
     }
@@ -60,8 +67,10 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        const errorMsg = data.error || 'An error occurred during registration.';
+        setError(errorMsg);
         toast.error('Registration failed', {
-          description: data.error || 'An error occurred during registration.',
+          description: errorMsg,
         });
         setIsLoading(false);
         return;
@@ -75,16 +84,21 @@ export default function RegisterPage() {
         description: 'You are now logged in. Welcome to StayFinder!',
       });
 
-      // Redirect to the specified page or default to home
-      const redirect = searchParams.get('redirect');
-      if (redirect && redirect.startsWith('/')) {
-        router.push(redirect);
-      } else {
-        router.push('/');
-      }
+      // Use window.location.href to force a full page reload
+      // This ensures the Navbar re-checks authentication
+      setTimeout(() => {
+        const redirect = searchParams.get('redirect');
+        if (redirect && redirect.startsWith('/')) {
+          window.location.href = redirect;
+        } else {
+          window.location.href = '/';
+        }
+      }, 500);
     } catch (error) {
+      const errorMsg = 'An unexpected error occurred. Please try again.';
+      setError(errorMsg);
       toast.error('Registration failed', {
-        description: 'An unexpected error occurred. Please try again.',
+        description: errorMsg,
       });
       setIsLoading(false);
     }
@@ -103,6 +117,11 @@ export default function RegisterPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
@@ -114,6 +133,7 @@ export default function RegisterPage() {
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   required
                   autoComplete="given-name"
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -126,6 +146,7 @@ export default function RegisterPage() {
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   required
                   autoComplete="family-name"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -139,6 +160,7 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
                 autoComplete="email"
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -153,11 +175,13 @@ export default function RegisterPage() {
                   required
                   autoComplete="off"
                   className="pr-10"
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -180,11 +204,13 @@ export default function RegisterPage() {
                   required
                   autoComplete="off"
                   className="pr-10"
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-4 h-4" />
