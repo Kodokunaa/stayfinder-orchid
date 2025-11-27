@@ -32,6 +32,7 @@ export default function ProfilePage() {
     role: '',
   });
   const [previewImage, setPreviewImage] = useState<string>('');
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check authentication and fetch profile data
@@ -91,10 +92,7 @@ export default function ProfilePage() {
     checkAuthAndFetchProfile();
   }, [router]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processImageFile = (file: File) => {
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image too large', {
@@ -118,6 +116,45 @@ export default function ProfilePage() {
       setPreviewImage(base64String);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processImageFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find((file) => file.type.startsWith('image/'));
+
+    if (imageFile) {
+      processImageFile(imageFile);
+    } else {
+      toast.error('Invalid file type', {
+        description: 'Please drop an image file',
+      });
+    }
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleRemoveImage = () => {
@@ -193,9 +230,21 @@ export default function ProfilePage() {
             <CardContent className="space-y-6">
               {/* Profile Picture Section */}
               <div className="flex flex-col items-center gap-4 pb-6 border-b">
-                <div className="relative">
+                <div 
+                  className={`relative cursor-pointer transition-all ${
+                    isDragging ? 'scale-105' : ''
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={handleImageClick}
+                >
                   {previewImage ? (
-                    <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
+                    <div className={`relative w-32 h-32 rounded-full overflow-hidden border-4 transition-colors ${
+                      isDragging 
+                        ? 'border-primary shadow-lg' 
+                        : 'border-primary/20 hover:border-primary/40'
+                    }`}>
                       <Image
                         src={previewImage}
                         alt="Profile"
@@ -204,15 +253,34 @@ export default function ProfilePage() {
                       />
                       <button
                         type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 hover:bg-destructive/90 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveImage();
+                        }}
+                        className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 hover:bg-destructive/90 transition-colors z-10"
                       >
                         <X className="w-4 h-4" />
                       </button>
+                      {isDragging && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <Upload className="w-8 h-8 text-primary" />
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-primary/20">
-                      <User className="w-16 h-16 text-muted-foreground" />
+                    <div className={`w-32 h-32 rounded-full bg-muted flex flex-col items-center justify-center border-4 transition-colors ${
+                      isDragging 
+                        ? 'border-primary bg-primary/10 shadow-lg' 
+                        : 'border-primary/20 hover:border-primary/40 hover:bg-muted/80'
+                    }`}>
+                      {isDragging ? (
+                        <Upload className="w-16 h-16 text-primary" />
+                      ) : (
+                        <>
+                          <User className="w-12 h-12 text-muted-foreground" />
+                          <Upload className="w-5 h-5 text-muted-foreground mt-1" />
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -246,7 +314,7 @@ export default function ProfilePage() {
                   className="hidden"
                 />
                 <p className="text-xs text-muted-foreground text-center">
-                  JPG, PNG or GIF. Max size 5MB.
+                  {isDragging ? 'Drop image here' : 'Click or drag & drop to upload. JPG, PNG or GIF. Max size 5MB.'}
                 </p>
               </div>
 
