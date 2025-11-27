@@ -54,12 +54,15 @@ export default function LoginPage() {
         description: 'You have successfully logged in.',
       });
 
+      // Wait a moment to ensure token is stored in localStorage
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Redirect to the specified page or default to home
       const redirect = searchParams.get('redirect');
       if (redirect && redirect.startsWith('/')) {
-        router.push(redirect);
+        window.location.href = redirect;
       } else {
-        router.push('/');
+        window.location.href = '/';
       }
     } catch (error) {
       toast.error('Login failed', {
