@@ -70,14 +70,13 @@ export default function LoginPage() {
         description: 'You have successfully logged in.',
       });
 
-      // Small delay to show success message
+      // Small delay to show success message, then force full page reload
       setTimeout(() => {
-        // Redirect to the specified page or default to home
         const redirect = searchParams.get('redirect');
         if (redirect && redirect.startsWith('/')) {
-          router.push(redirect);
+          window.location.href = redirect;
         } else {
-          router.push('/');
+          window.location.href = '/';
         }
       }, 500);
     } catch (error) {
