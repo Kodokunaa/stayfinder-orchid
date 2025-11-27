@@ -42,9 +42,11 @@ export default function Navbar() {
 
       try {
         const response = await fetch('/api/auth/verify-session', {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${sessionToken}`,
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ sessionToken }),
         });
 
         if (response.ok) {
