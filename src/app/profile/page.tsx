@@ -45,11 +45,13 @@ export default function ProfilePage() {
       }
 
       try {
-        // Verify session
+        // Verify session - use same method as Navbar
         const verifyResponse = await fetch('/api/auth/verify-session', {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${sessionToken}`,
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ sessionToken }),
         });
 
         if (!verifyResponse.ok) {
