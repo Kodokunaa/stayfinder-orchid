@@ -36,5 +36,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/my-bookings", "/admin", "/profile"],
+  matcher: ["/my-bookings", "/admin"],
 };
