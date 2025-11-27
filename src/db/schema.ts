@@ -61,6 +61,17 @@ export const users = sqliteTable('users', {
   createdAt: text('created_at').notNull(),
 });
 
+// Custom sessions table for users table
+export const userSessions = sqliteTable('user_sessions', {
+  id: text('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+});
+
 // Listings table
 export const listings = sqliteTable('listings', {
   id: integer('id').primaryKey({ autoIncrement: true }),

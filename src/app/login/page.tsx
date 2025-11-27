@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,33 +35,42 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await authClient.signIn.email({
-        email: formData.email,
-        password: formData.password,
-        rememberMe: formData.rememberMe,
+      const response = await fetch('/api/auth/custom-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          rememberMe: formData.rememberMe,
+        }),
       });
 
-      if (error?.code) {
+      const data = await response.json();
+
+      if (!response.ok) {
         toast.error('Login failed', {
-          description: 'Invalid email or password. Please make sure you have already registered an account and try again.',
+          description: data.error || 'Invalid email or password. Please make sure you have already registered an account and try again.',
         });
         setIsLoading(false);
         return;
       }
 
+      // Store session token in localStorage
+      localStorage.setItem('session_token', data.sessionToken);
+      localStorage.setItem('user_data', JSON.stringify(data.user));
+
       toast.success('Welcome back!', {
         description: 'You have successfully logged in.',
       });
 
-      // Wait a moment to ensure token is stored in localStorage
-      await new Promise(resolve => setTimeout(resolve, 500));
-
       // Redirect to the specified page or default to home
       const redirect = searchParams.get('redirect');
       if (redirect && redirect.startsWith('/')) {
-        window.location.href = redirect;
+        router.push(redirect);
       } else {
-        window.location.href = '/';
+        router.push('/');
       }
     } catch (error) {
       toast.error('Login failed', {

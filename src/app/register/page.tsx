@@ -3,25 +3,12 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-
-type ErrorTypes = Partial<Record<keyof typeof authClient.$ERROR_CODES, string>>;
-const errorCodes = {
-  USER_ALREADY_EXISTS: 'Email already registered',
-} satisfies ErrorTypes;
-
-const getErrorMessage = (code: string) => {
-  if (code in errorCodes) {
-    return errorCodes[code as keyof typeof errorCodes];
-  }
-  return 'Registration failed';
-};
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -57,49 +44,43 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // Step 1: Register the user
-      const { error: signUpError } = await authClient.signUp.email({
-        email: formData.email,
-        name: `${formData.firstName} ${formData.lastName}`,
-        password: formData.password,
+      const response = await fetch('/api/auth/custom-register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        }),
       });
 
-      if (signUpError?.code) {
+      const data = await response.json();
+
+      if (!response.ok) {
         toast.error('Registration failed', {
-          description: getErrorMessage(signUpError.code),
+          description: data.error || 'An error occurred during registration.',
         });
         setIsLoading(false);
         return;
       }
 
-      // Step 2: Automatically log in the user
-      const { error: signInError } = await authClient.signIn.email({
-        email: formData.email,
-        password: formData.password,
-        rememberMe: true,
-      });
-
-      if (signInError?.code) {
-        toast.success('Account created!', {
-          description: 'Please log in with your credentials.',
-        });
-        router.push('/login?registered=true');
-        return;
-      }
+      // Store session token in localStorage (auto-login)
+      localStorage.setItem('session_token', data.sessionToken);
+      localStorage.setItem('user_data', JSON.stringify(data.user));
 
       toast.success('Account created!', {
         description: 'You are now logged in. Welcome to StayFinder!',
       });
 
-      // Wait a moment to ensure token is stored
-      await new Promise(resolve => setTimeout(resolve, 500));
-
       // Redirect to the specified page or default to home
       const redirect = searchParams.get('redirect');
       if (redirect && redirect.startsWith('/')) {
-        window.location.href = redirect;
+        router.push(redirect);
       } else {
-        window.location.href = '/';
+        router.push('/');
       }
     } catch (error) {
       toast.error('Registration failed', {
