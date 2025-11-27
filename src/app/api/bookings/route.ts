@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bookingStatus = status || 'pending';
+    const bookingStatus = status || 'confirmed';
 
     // Create booking
     const newBooking = await db
