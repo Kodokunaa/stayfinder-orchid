@@ -199,6 +199,14 @@ export default function MyBookingsPage() {
     });
   };
 
+  // Separate bookings by status
+  const confirmedBookings = bookings.filter(
+    (booking) => booking.status === 'confirmed' || booking.status === 'pending'
+  );
+  const cancelledBookings = bookings.filter(
+    (booking) => booking.status === 'cancelled' || booking.status === 'refunded'
+  );
+
   if (!user || loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -250,15 +258,62 @@ export default function MyBookingsPage() {
                 <p className="text-gray-400">Start exploring and book your first stay!</p>
               </div>
             ) : (
-              <div className="space-y-6">
-                {bookings.map((booking) => (
-                  <BookingCard
-                    key={booking.id}
-                    booking={booking}
-                    onCancel={handleCancelBooking}
-                    onRefresh={fetchBookings}
-                  />
-                ))}
+              <div className="space-y-8">
+                {/* Confirmed Bookings Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Confirmed Bookings
+                    </h2>
+                    <span className="text-sm text-gray-600">
+                      {confirmedBookings.length} {confirmedBookings.length === 1 ? 'booking' : 'bookings'}
+                    </span>
+                  </div>
+                  {confirmedBookings.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <p className="text-gray-500">No confirmed bookings</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {confirmedBookings.map((booking) => (
+                        <BookingCard
+                          key={booking.id}
+                          booking={booking}
+                          onCancel={handleCancelBooking}
+                          onRefresh={fetchBookings}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Cancelled Bookings Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Cancelled Bookings
+                    </h2>
+                    <span className="text-sm text-gray-600">
+                      {cancelledBookings.length} {cancelledBookings.length === 1 ? 'booking' : 'bookings'}
+                    </span>
+                  </div>
+                  {cancelledBookings.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <p className="text-gray-500">No cancelled bookings</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {cancelledBookings.map((booking) => (
+                        <BookingCard
+                          key={booking.id}
+                          booking={booking}
+                          onCancel={handleCancelBooking}
+                          onRefresh={fetchBookings}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </TabsContent>
