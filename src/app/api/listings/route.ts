@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { listings } from '@/db/schema';
-import { eq, and, gte, lte, like, or, desc, sql } from 'drizzle-orm';
+import { listings, bookings } from '@/db/schema';
+import { eq, and, gte, lte, like, or, desc, sql, notInArray, inArray } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,9 +42,32 @@ export async function GET(request: NextRequest) {
     const guests = searchParams.get('guests');
     const bedrooms = searchParams.get('bedrooms');
     const userId = searchParams.get('userId');
+    const featured = searchParams.get('featured');
 
     let query = db.select().from(listings);
     const conditions = [];
+
+    // Featured filter
+    if (featured === 'true') {
+      conditions.push(eq(listings.featured, true));
+      
+      // Get listing IDs that have confirmed or pending bookings
+      const bookedListingIds = await db
+        .selectDistinct({ listingId: bookings.listingId })
+        .from(bookings)
+        .where(
+          or(
+            eq(bookings.status, 'confirmed'),
+            eq(bookings.status, 'pending')
+          )
+        );
+      
+      // If there are booked listings, exclude them
+      if (bookedListingIds.length > 0) {
+        const idsToExclude = bookedListingIds.map(b => b.listingId);
+        conditions.push(notInArray(listings.id, idsToExclude));
+      }
+    }
 
     // Search filter
     if (search) {
@@ -111,6 +134,7 @@ export async function POST(request: NextRequest) {
       numBathrooms,
       images,
       userId,
+      featured,
     } = body;
 
     // Validation
@@ -206,11 +230,12 @@ export async function POST(request: NextRequest) {
 
     const timestamp = new Date().toISOString();
     const imagesJson = JSON.stringify(images);
+    const featuredValue = featured ? 1 : 0;
 
     // Use raw SQL to bypass Drizzle's id field issue
     const result = await db.run(
-      sql`INSERT INTO listings (title, description, price_per_night, num_guests, num_bedrooms, num_beds, num_bathrooms, images, user_id, status, created_at, updated_at)
-          VALUES (${title.trim()}, ${description.trim()}, ${pricePerNight}, ${numGuests}, ${numBedrooms}, ${numBeds}, ${numBathrooms}, ${imagesJson}, ${userId}, 'available', ${timestamp}, ${timestamp})`
+      sql`INSERT INTO listings (title, description, price_per_night, num_guests, num_bedrooms, num_beds, num_bathrooms, images, user_id, status, featured, created_at, updated_at)
+          VALUES (${title.trim()}, ${description.trim()}, ${pricePerNight}, ${numGuests}, ${numBedrooms}, ${numBeds}, ${numBathrooms}, ${imagesJson}, ${userId}, 'available', ${featuredValue}, ${timestamp}, ${timestamp})`
     );
 
     // Fetch the newly created listing
@@ -268,6 +293,7 @@ export async function PUT(request: NextRequest) {
       numBeds,
       numBathrooms,
       images,
+      featured,
     } = body;
 
     const updates: any = {
@@ -377,6 +403,10 @@ export async function PUT(request: NextRequest) {
         );
       }
       updates.images = JSON.stringify(images);
+    }
+
+    if (featured !== undefined) {
+      updates.featured = featured ? 1 : 0;
     }
 
     const updated = await db

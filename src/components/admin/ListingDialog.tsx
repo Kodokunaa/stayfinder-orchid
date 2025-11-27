@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { MultiImageUpload } from '@/components/ui/multi-image-upload';
 import { toast } from 'sonner';
 
@@ -24,6 +25,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
     numBedrooms: '',
     numBeds: '',
     numBathrooms: '',
+    featured: false,
   });
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,6 +72,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
         numBedrooms: listing.numBedrooms.toString(),
         numBeds: listing.numBeds.toString(),
         numBathrooms: listing.numBathrooms.toString(),
+        featured: listing.featured === 1 || listing.featured === true,
       });
       setImages(Array.isArray(listing.images) ? listing.images : []);
     } else {
@@ -81,6 +84,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
         numBedrooms: '',
         numBeds: '',
         numBathrooms: '',
+        featured: false,
       });
       setImages([]);
     }
@@ -112,6 +116,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
         numBathrooms: parseInt(formData.numBathrooms),
         images,
         userId: userId,
+        featured: formData.featured,
       };
 
       const url = listing ? `/api/listings?id=${listing.id}` : '/api/listings';
@@ -235,6 +240,17 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 required
               />
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="featured"
+              checked={formData.featured}
+              onCheckedChange={(checked) => setFormData({ ...formData, featured: checked as boolean })}
+            />
+            <Label htmlFor="featured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Enable Featured (Show in featured section on homepage)
+            </Label>
           </div>
 
           <div>

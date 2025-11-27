@@ -85,6 +85,7 @@ export const listings = sqliteTable('listings', {
   images: text('images', { mode: 'json' }).notNull(),
   userId: integer('user_id').notNull().references(() => users.id),
   status: text('status').notNull().default('available'),
+  featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

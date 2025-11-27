@@ -10,8 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, MapPin, Users, Home, Mail, Phone, Shield } from 'lucide-react';
+import { Search, MapPin, Users, Home, Mail, Phone, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface Listing {
   id: number;
@@ -23,24 +24,25 @@ interface Listing {
 }
 
 export default function HomePage() {
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true, 
+    align: 'start',
+    slidesToScroll: 1,
+  });
 
   useEffect(() => {
-    fetchListings();
+    fetchFeaturedListings();
   }, []);
 
-  const fetchListings = async () => {
+  const fetchFeaturedListings = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        limit: '8',
-      });
-      
-      const response = await fetch(`/api/listings?${params}`);
+      const response = await fetch('/api/listings?featured=true&limit=10');
       const data = await response.json();
       
       const formattedListings = data.map((listing: any) => ({
@@ -52,12 +54,20 @@ export default function HomePage() {
         numBeds: listing.numBeds,
       }));
       
-      setListings(formattedListings);
+      setFeaturedListings(formattedListings);
     } catch (error) {
-      console.error('Error fetching listings:', error);
+      console.error('Error fetching featured listings:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const scrollPrev = () => {
+    if (emblaApi) emblaApi.scrollPrev();
+  };
+
+  const scrollNext = () => {
+    if (emblaApi) emblaApi.scrollNext();
   };
 
   const handleSearch = (query: string) => {
@@ -133,13 +143,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trending Section */}
+      {/* Featured Section */}
       <section className="w-full bg-background py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">Trending Stays</h2>
-              <p className="text-gray-600 mt-2">Popular properties you'll love</p>
+              <h2 className="text-3xl font-bold text-gray-900">Featured Stays</h2>
+              <p className="text-gray-600 mt-2">Handpicked properties available now</p>
             </div>
             <Link href="/listings">
               <Button variant="outline">View All Listings</Button>
@@ -147,8 +157,8 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="space-y-3">
                   <Skeleton className="h-48 w-full rounded-lg" />
                   <Skeleton className="h-4 w-3/4" />
@@ -156,15 +166,44 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          ) : listings.length === 0 ? (
+          ) : featuredListings.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No listings available yet.</p>
+              <p className="text-gray-500 text-lg">No featured listings available yet.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {listings.map((listing) => (
-                <ListingCard key={listing.id} {...listing} />
-              ))}
+            <div className="relative">
+              {/* Carousel Navigation Buttons */}
+              {featuredListings.length > 5 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 rounded-full bg-background shadow-lg"
+                    onClick={scrollPrev}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 rounded-full bg-background shadow-lg"
+                    onClick={scrollNext}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+
+              {/* Carousel Container */}
+              <div className="overflow-hidden" ref={emblaRef}>
+                <div className="flex gap-6">
+                  {featuredListings.map((listing) => (
+                    <div key={listing.id} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] md:flex-[0_0_33.333%] lg:flex-[0_0_20%]">
+                      <ListingCard {...listing} />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
