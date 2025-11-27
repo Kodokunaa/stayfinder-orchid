@@ -61,6 +61,11 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
           <p>&copy; {new Date().getFullYear()} StayFinder. All rights reserved.</p>
+          <div className="mt-4 space-y-1">
+            <p className="font-semibold text-gray-300">Development Team</p>
+            <p>Front-End: Patrick Sola, Kassandra Inog</p>
+            <p>Back-End: Paul Castillo</p>
+          </div>
         </div>
       </div>
     </footer>
