@@ -30,14 +30,36 @@ export default function HomePage() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
-    loop: true, 
+    loop: false,
     align: 'start',
-    slidesToScroll: 1,
+    skipSnaps: false,
+    dragFree: false,
   });
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
   useEffect(() => {
     fetchFeaturedListings();
   }, []);
+
+  // Update scroll button states
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const updateScrollButtons = () => {
+      setCanScrollPrev(emblaApi.canScrollPrev());
+      setCanScrollNext(emblaApi.canScrollNext());
+    };
+
+    emblaApi.on('select', updateScrollButtons);
+    emblaApi.on('init', updateScrollButtons);
+    updateScrollButtons();
+
+    return () => {
+      emblaApi.off('select', updateScrollButtons);
+      emblaApi.off('init', updateScrollButtons);
+    };
+  }, [emblaApi]);
 
   const fetchFeaturedListings = async () => {
     try {
@@ -157,7 +179,7 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="space-y-3">
                   <Skeleton className="h-48 w-full rounded-lg" />
@@ -171,34 +193,37 @@ export default function HomePage() {
               <p className="text-gray-500 text-lg">No featured listings available yet.</p>
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative group">
               {/* Carousel Navigation Buttons */}
-              {featuredListings.length > 5 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 rounded-full bg-background shadow-lg"
-                    onClick={scrollPrev}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 rounded-full bg-background shadow-lg"
-                    onClick={scrollNext}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </>
+              {canScrollPrev && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 rounded-full bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={scrollPrev}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+              {canScrollNext && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 rounded-full bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={scrollNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               )}
 
               {/* Carousel Container */}
               <div className="overflow-hidden" ref={emblaRef}>
                 <div className="flex gap-6">
                   {featuredListings.map((listing) => (
-                    <div key={listing.id} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] md:flex-[0_0_33.333%] lg:flex-[0_0_20%]">
+                    <div 
+                      key={listing.id} 
+                      className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_calc(50%-12px)] md:flex-[0_0_calc(33.333%-16px)] lg:flex-[0_0_calc(25%-18px)] xl:flex-[0_0_calc(20%-19.2px)]"
+                    >
                       <ListingCard {...listing} />
                     </div>
                   ))}
