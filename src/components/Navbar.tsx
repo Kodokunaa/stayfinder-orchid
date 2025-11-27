@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Home } from 'lucide-react';
+import { Home, LogIn, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
   return (
@@ -22,21 +23,34 @@ export default function Navbar() {
             <Link href="/listings" className="text-sm font-medium hover:text-primary transition-colors">
               Listings
             </Link>
-            <Link href="/my-bookings" className="text-sm font-medium hover:text-primary transition-colors">
-              My Bookings
+            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors">
+              Contact
             </Link>
-            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors !whitespace-pre-line">
-
+            <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors">
+              About
             </Link>
-            <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors !whitespace-pre-line">
-
-            </Link>
-            <Link href="/admin" className="text-sm font-medium hover:text-primary transition-colors !w-[12.9%] !h-full">
+            <Link href="/admin" className="text-sm font-medium hover:text-primary transition-colors">
               Admin
             </Link>
+            
+            {/* Auth Buttons */}
+            <div className="flex items-center gap-3 ml-4 border-l pl-6">
+              <Link href="/login">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button size="sm" className="gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Register
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
-    </nav>);
-
+    </nav>
+  );
 }
