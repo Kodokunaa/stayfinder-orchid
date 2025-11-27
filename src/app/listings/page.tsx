@@ -60,9 +60,9 @@ export default function ListingsPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">All Listings</h1>
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">All Listings</h1>
           
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -76,12 +76,12 @@ export default function ListingsPage() {
           </div>
         </div>
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-sm sm:text-base text-gray-600 mb-6">
           {loading ? 'Loading...' : `${listings.length} properties available`}
         </p>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="space-y-3">
                 <Skeleton className="h-48 w-full rounded-lg" />
@@ -92,10 +92,10 @@ export default function ListingsPage() {
           </div>
         ) : listings.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No listings found.</p>
+            <p className="text-base sm:text-lg text-gray-500">No listings found.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {listings.map((listing) => (
               <ListingCard key={listing.id} {...listing} />
             ))}

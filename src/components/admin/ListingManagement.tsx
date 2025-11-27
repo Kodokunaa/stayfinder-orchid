@@ -118,8 +118,8 @@ export default function ListingManagement() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <Input
@@ -130,7 +130,7 @@ export default function ListingManagement() {
             className="pl-10"
           />
         </div>
-        <Button onClick={handleAdd}>
+        <Button onClick={handleAdd} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Add Listing
         </Button>
@@ -146,9 +146,9 @@ export default function ListingManagement() {
         <div className="space-y-4">
           {listings.map((listing) => (
             <Card key={listing.id}>
-              <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <div className="relative w-full sm:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden">
                     <Image
                       src={listing.images[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'}
                       alt={listing.title}
@@ -158,43 +158,44 @@ export default function ListingManagement() {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg mb-1 truncate">{listing.title}</h3>
+                    <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{listing.title}</h3>
                     <p className="text-sm text-gray-600 line-clamp-2 mb-2">{listing.description}</p>
-                    <div className="flex gap-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                       <span>${listing.pricePerNight}/night</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>{listing.numGuests} guests</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>{listing.numBedrooms} bedrooms</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>{listing.numBeds} beds</span>
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex sm:flex-col gap-2 justify-end">
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(listing)}
+                      className="flex-1 sm:flex-none"
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" className="flex-1 sm:flex-none">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Listing</AlertDialogTitle>
                           <AlertDialogDescription>
                             Are you sure you want to delete "{listing.title}"? This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(listing.id)}>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(listing.id)} className="w-full sm:w-auto">
                             Delete
                           </AlertDialogAction>
                         </AlertDialogFooter>

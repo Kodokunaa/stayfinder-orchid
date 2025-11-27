@@ -211,8 +211,8 @@ export default function MyBookingsPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
-          <Skeleton className="h-8 w-48 mb-8" />
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <Skeleton className="h-8 w-48 mb-6 sm:mb-8" />
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-48 w-full" />
@@ -228,20 +228,21 @@ export default function MyBookingsPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
-          <p className="text-gray-600">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             Manage your bookings and view transaction history
           </p>
         </div>
 
         <Tabs defaultValue="bookings" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="transactions">
+          <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto">
+            <TabsTrigger value="bookings" className="flex-1 sm:flex-none">Bookings</TabsTrigger>
+            <TabsTrigger value="transactions" className="flex-1 sm:flex-none">
               <Receipt className="w-4 h-4 mr-2" />
-              Transactions
+              <span className="hidden sm:inline">Transactions</span>
+              <span className="sm:hidden">History</span>
             </TabsTrigger>
           </TabsList>
 
@@ -254,24 +255,24 @@ export default function MyBookingsPage() {
               </div>
             ) : bookings.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <p className="text-gray-500 text-lg mb-2">No bookings yet</p>
-                <p className="text-gray-400">Start exploring and book your first stay!</p>
+                <p className="text-base sm:text-lg text-gray-500 mb-2">No bookings yet</p>
+                <p className="text-sm text-gray-400">Start exploring and book your first stay!</p>
               </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 {/* Confirmed Bookings Section */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                       Confirmed Bookings
                     </h2>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-xs sm:text-sm text-gray-600">
                       {confirmedBookings.length} {confirmedBookings.length === 1 ? 'booking' : 'bookings'}
                     </span>
                   </div>
                   {confirmedBookings.length === 0 ? (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No confirmed bookings</p>
+                      <p className="text-sm sm:text-base text-gray-500">No confirmed bookings</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -290,16 +291,16 @@ export default function MyBookingsPage() {
                 {/* Cancelled Bookings Section */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                       Cancelled Bookings
                     </h2>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-xs sm:text-sm text-gray-600">
                       {cancelledBookings.length} {cancelledBookings.length === 1 ? 'booking' : 'bookings'}
                     </span>
                   </div>
                   {cancelledBookings.length === 0 ? (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No cancelled bookings</p>
+                      <p className="text-sm sm:text-base text-gray-500">No cancelled bookings</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -327,36 +328,36 @@ export default function MyBookingsPage() {
               </div>
             ) : transactions.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <p className="text-gray-500 text-lg mb-2">No transactions yet</p>
-                <p className="text-gray-400">Your transaction history will appear here</p>
+                <p className="text-base sm:text-lg text-gray-500 mb-2">No transactions yet</p>
+                <p className="text-sm text-gray-400">Your transaction history will appear here</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {transactions.map((transaction) => (
                   <Card key={transaction.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                               transaction.amount < 0 ? 'bg-red-100' : 'bg-green-100'
                             }`}>
-                              <Receipt className={`w-6 h-6 ${
+                              <Receipt className={`w-5 h-5 sm:w-6 sm:h-6 ${
                                 transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
                               }`} />
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-900">
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
                                 {transaction.description}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-xs sm:text-sm text-gray-500">
                                 {formatDate(transaction.createdAt)}
                               </p>
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className={`text-2xl font-bold ${
+                        <div className="text-right flex-shrink-0">
+                          <div className={`text-lg sm:text-2xl font-bold ${
                             transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
                           }`}>
                             {transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount / 100).toFixed(2)}

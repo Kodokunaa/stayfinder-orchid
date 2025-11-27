@@ -157,14 +157,14 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
 
   return (
     <Dialog open={open} onOpenChange={() => onClose(false)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{listing ? 'Edit Listing' : 'Add New Listing'}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">{listing ? 'Edit Listing' : 'Add New Listing'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className="text-sm">Title</Label>
             <Input
               id="title"
               value={formData.title}
@@ -172,11 +172,12 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
               placeholder="Beautiful apartment in downtown"
               required
               minLength={10}
+              className="text-sm"
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-sm">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -185,12 +186,13 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
               rows={4}
               required
               minLength={20}
+              className="text-sm"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="pricePerNight">Price per Night ($)</Label>
+              <Label htmlFor="pricePerNight" className="text-sm">Price per Night ($)</Label>
               <Input
                 id="pricePerNight"
                 type="number"
@@ -200,11 +202,12 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
                 onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
+                className="text-sm"
               />
             </div>
 
             <div>
-              <Label htmlFor="numGuests">Number of Guests</Label>
+              <Label htmlFor="numGuests" className="text-sm">Number of Guests</Label>
               <Input
                 id="numGuests"
                 type="number"
@@ -214,11 +217,12 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 onChange={(e) => setFormData({ ...formData, numGuests: e.target.value })}
                 onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
+                className="text-sm"
               />
             </div>
 
             <div>
-              <Label htmlFor="numBedrooms">Number of Bedrooms</Label>
+              <Label htmlFor="numBedrooms" className="text-sm">Number of Bedrooms</Label>
               <Input
                 id="numBedrooms"
                 type="number"
@@ -228,11 +232,12 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 onChange={(e) => setFormData({ ...formData, numBedrooms: e.target.value })}
                 onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
+                className="text-sm"
               />
             </div>
 
             <div>
-              <Label htmlFor="numBeds">Number of Beds</Label>
+              <Label htmlFor="numBeds" className="text-sm">Number of Beds</Label>
               <Input
                 id="numBeds"
                 type="number"
@@ -242,11 +247,12 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 onChange={(e) => setFormData({ ...formData, numBeds: e.target.value })}
                 onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
+                className="text-sm"
               />
             </div>
 
-            <div>
-              <Label htmlFor="numBathrooms">Number of Bathrooms</Label>
+            <div className="sm:col-span-2">
+              <Label htmlFor="numBathrooms" className="text-sm">Number of Bathrooms</Label>
               <Input
                 id="numBathrooms"
                 type="number"
@@ -256,6 +262,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 onChange={(e) => setFormData({ ...formData, numBathrooms: e.target.value })}
                 onKeyDown={(e) => handleNumberKeyDown(e, true)}
                 required
+                className="text-sm"
               />
             </div>
           </div>
@@ -266,24 +273,24 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
               checked={formData.featured}
               onCheckedChange={(checked) => setFormData({ ...formData, featured: checked as boolean })}
             />
-            <Label htmlFor="featured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <Label htmlFor="featured" className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Enable Featured (Show in featured section on homepage)
             </Label>
           </div>
 
           <div>
-            <Label>Property Images (Required)</Label>
+            <Label className="text-sm">Property Images (Required)</Label>
             <MultiImageUpload value={images} onChange={setImages} maxImages={10} className="mt-2" />
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Upload at least 1 image (max 10). First image will be the cover.
             </p>
           </div>
 
-          <div className="flex gap-2 justify-end pt-4">
-            <Button type="button" variant="outline" onClick={() => onClose(false)} disabled={loading}>
+          <div className="flex flex-col sm:flex-row gap-2 justify-end pt-4">
+            <Button type="button" variant="outline" onClick={() => onClose(false)} disabled={loading} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || images.length === 0 || !userId}>
+            <Button type="submit" disabled={loading || images.length === 0 || !userId} className="w-full sm:w-auto">
               {loading ? 'Saving...' : listing ? 'Update Listing' : 'Create Listing'}
             </Button>
           </div>

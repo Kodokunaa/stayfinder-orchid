@@ -95,7 +95,7 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <Input
@@ -117,9 +117,9 @@ export default function UserManagement() {
         <div className="space-y-4">
           {users.map((user) => (
             <Card key={user.id}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16 flex-shrink-0 rounded-full overflow-hidden border-2 border-primary/20">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-full overflow-hidden border-2 border-primary/20">
                     {user.profilePicture ? (
                       <Image
                         src={user.profilePicture}
@@ -130,15 +130,15 @@ export default function UserManagement() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-muted">
-                        <User className="w-8 h-8 text-muted-foreground" />
+                        <User className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
                       </div>
                     )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-lg">{user.firstName} {user.lastName}</h3>
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-base sm:text-lg">{user.firstName} {user.lastName}</h3>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
                         {user.role === 'admin' ? (
                           <>
                             <Shield className="w-3 h-3 mr-1" />
@@ -149,7 +149,7 @@ export default function UserManagement() {
                         )}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 break-all">{user.email}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Joined {formatDate(user.createdAt)}
                     </p>
@@ -158,21 +158,22 @@ export default function UserManagement() {
                   {user.role !== 'admin' && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
                           <Shield className="w-4 h-4 mr-2" />
-                          Promote to Admin
+                          <span className="hidden sm:inline">Promote to Admin</span>
+                          <span className="sm:hidden">Promote</span>
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Promote to Admin</AlertDialogTitle>
                           <AlertDialogDescription>
                             Are you sure you want to promote {user.firstName} {user.lastName} to admin? They will have full access to manage listings and users.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handlePromoteToAdmin(user.id)}>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handlePromoteToAdmin(user.id)} className="w-full sm:w-auto">
                             Yes, promote
                           </AlertDialogAction>
                         </AlertDialogFooter>
