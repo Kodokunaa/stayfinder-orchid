@@ -8,14 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Home, LogIn, Eye, EyeOff } from 'lucide-react';
+import { Home, LogIn, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -33,6 +35,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/auth/custom-login', {
@@ -50,8 +53,10 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        const errorMessage = data.error || 'Invalid email or password. Please make sure you have already registered an account and try again.';
+        setError(errorMessage);
         toast.error('Login failed', {
-          description: data.error || 'Invalid email or password. Please make sure you have already registered an account and try again.',
+          description: errorMessage,
         });
         setIsLoading(false);
         return;
@@ -65,16 +70,22 @@ export default function LoginPage() {
         description: 'You have successfully logged in.',
       });
 
-      // Redirect to the specified page or default to home
-      const redirect = searchParams.get('redirect');
-      if (redirect && redirect.startsWith('/')) {
-        router.push(redirect);
-      } else {
-        router.push('/');
-      }
+      // Small delay to show success message
+      setTimeout(() => {
+        // Redirect to the specified page or default to home
+        const redirect = searchParams.get('redirect');
+        if (redirect && redirect.startsWith('/')) {
+          router.push(redirect);
+        } else {
+          router.push('/');
+        }
+      }, 500);
     } catch (error) {
+      console.error('Login error:', error);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
+      setError(errorMessage);
       toast.error('Login failed', {
-        description: 'An unexpected error occurred. Please try again.',
+        description: errorMessage,
       });
       setIsLoading(false);
     }
@@ -93,6 +104,12 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -103,6 +120,7 @@ export default function LoginPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
                 autoComplete="email"
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -117,11 +135,13 @@ export default function LoginPage() {
                   required
                   autoComplete="off"
                   className="pr-10"
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -138,6 +158,7 @@ export default function LoginPage() {
                 onCheckedChange={(checked) => 
                   setFormData({ ...formData, rememberMe: checked as boolean })
                 }
+                disabled={isLoading}
               />
               <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer">
                 Remember me
