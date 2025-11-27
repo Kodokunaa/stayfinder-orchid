@@ -90,6 +90,14 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
     }
   }, [listing, open]);
 
+  // Prevent typing 'e', '+', '-' in number inputs
+  const handleNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, allowDecimal = false) => {
+    const invalidChars = allowDecimal ? ['e', 'E', '+', '-'] : ['e', 'E', '+', '-', '.'];
+    if (invalidChars.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -190,6 +198,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 step="1"
                 value={formData.pricePerNight}
                 onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
+                onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
               />
             </div>
@@ -203,6 +212,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 step="1"
                 value={formData.numGuests}
                 onChange={(e) => setFormData({ ...formData, numGuests: e.target.value })}
+                onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
               />
             </div>
@@ -216,6 +226,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 step="1"
                 value={formData.numBedrooms}
                 onChange={(e) => setFormData({ ...formData, numBedrooms: e.target.value })}
+                onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
               />
             </div>
@@ -229,6 +240,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 step="1"
                 value={formData.numBeds}
                 onChange={(e) => setFormData({ ...formData, numBeds: e.target.value })}
+                onKeyDown={(e) => handleNumberKeyDown(e, false)}
                 required
               />
             </div>
@@ -242,6 +254,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 step="0.5"
                 value={formData.numBathrooms}
                 onChange={(e) => setFormData({ ...formData, numBathrooms: e.target.value })}
+                onKeyDown={(e) => handleNumberKeyDown(e, true)}
                 required
               />
             </div>
