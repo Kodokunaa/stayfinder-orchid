@@ -78,6 +78,7 @@ export default function RegisterPage() {
 
       // Store session token in localStorage (auto-login)
       localStorage.setItem('session_token', data.sessionToken);
+      localStorage.setItem('bearer_token', data.sessionToken); // Add for admin compatibility
       localStorage.setItem('user_data', JSON.stringify(data.user));
 
       toast.success('Account created!', {
