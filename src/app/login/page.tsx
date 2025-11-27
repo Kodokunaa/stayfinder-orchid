@@ -40,13 +40,13 @@ export default function LoginPage() {
         email: formData.email,
         password: formData.password,
         rememberMe: formData.rememberMe,
-        callbackURL: '/my-bookings',
       });
 
       if (error?.code) {
         toast.error('Login failed', {
           description: 'Invalid email or password. Please make sure you have already registered an account and try again.',
         });
+        setIsLoading(false);
         return;
       }
 
@@ -54,13 +54,17 @@ export default function LoginPage() {
         description: 'You have successfully logged in.',
       });
 
-      const redirect = searchParams.get('redirect') || '/my-bookings';
-      router.push(redirect);
+      // Redirect to the specified page or default to home
+      const redirect = searchParams.get('redirect');
+      if (redirect && redirect.startsWith('/')) {
+        router.push(redirect);
+      } else {
+        router.push('/');
+      }
     } catch (error) {
       toast.error('Login failed', {
         description: 'An unexpected error occurred. Please try again.',
       });
-    } finally {
       setIsLoading(false);
     }
   };
