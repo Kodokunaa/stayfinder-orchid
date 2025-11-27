@@ -8,6 +8,7 @@ export const users = sqliteTable('users', {
   lastName: text('last_name').notNull(),
   password: text('password').notNull(),
   role: text('role').notNull().default('renter'),
+  profilePicture: text('profile_picture'),
   createdAt: text('created_at').notNull(),
 });
 

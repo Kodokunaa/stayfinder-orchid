@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
+  profilePicture?: string;
   createdAt: string;
 }
 
@@ -117,10 +119,20 @@ export default function UserManagement() {
             <Card key={user.id}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16 flex-shrink-0 rounded-full overflow-hidden bg-gray-100">
-                    <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-gray-400" />
-                    </div>
+                  <div className="relative w-16 h-16 flex-shrink-0 rounded-full overflow-hidden border-2 border-primary/20">
+                    {user.profilePicture ? (
+                      <Image
+                        src={user.profilePicture}
+                        alt={`${user.firstName} ${user.lastName}`}
+                        width={64}
+                        height={64}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <User className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
