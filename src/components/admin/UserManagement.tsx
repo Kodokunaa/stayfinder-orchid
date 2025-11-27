@@ -18,14 +18,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import Image from 'next/image';
 import { toast } from 'sonner';
 
 interface User {
   id: number;
   email: string;
-  name: string;
-  image: string | null;
+  firstName: string;
+  lastName: string;
   role: string;
   createdAt: string;
 }
@@ -119,23 +118,14 @@ export default function UserManagement() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="relative w-16 h-16 flex-shrink-0 rounded-full overflow-hidden bg-gray-100">
-                    {user.image ? (
-                      <Image
-                        src={user.image}
-                        alt={user.name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <User className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )}
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="w-8 h-8 text-gray-400" />
+                    </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-lg">{user.name}</h3>
+                      <h3 className="font-semibold text-lg">{user.firstName} {user.lastName}</h3>
                       <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                         {user.role === 'admin' ? (
                           <>
@@ -165,7 +155,7 @@ export default function UserManagement() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Promote to Admin</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to promote {user.name} to admin? They will have full access to manage listings and users.
+                            Are you sure you want to promote {user.firstName} {user.lastName} to admin? They will have full access to manage listings and users.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
