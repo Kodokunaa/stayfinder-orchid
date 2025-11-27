@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Home, LogIn, UserPlus, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSession, authClient } from '@/lib/auth-client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -17,69 +16,66 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  profilePicture: string | null;
+}
+
 export default function Navbar() {
-  const { data: session, isPending, refetch } = useSession();
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [profilePicture, setProfilePicture] = useState<string>('');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (session?.user?.email) {
-        try {
-          const token = localStorage.getItem('bearer_token');
-          
-          // Check admin status
-          const adminResponse = await fetch('/api/admin/users', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-          
-          if (adminResponse.ok) {
-            const users = await adminResponse.json();
-            const currentUser = users.find((u: any) => u.email === session.user.email);
-            setIsAdmin(currentUser?.role === 'admin');
-          }
+    const checkAuth = async () => {
+      const sessionToken = localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
 
-          // Fetch profile picture
-          const profileResponse = await fetch('/api/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
+      try {
+        const response = await fetch('/api/auth/verify-session', {
+          headers: {
+            'Authorization': `Bearer ${sessionToken}`,
+          },
+        });
 
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            setProfilePicture(profileData.profilePicture || '');
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          setIsAdmin(false);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        } else {
+          // Invalid session, clear localStorage
+          localStorage.removeItem('session_token');
+          localStorage.removeItem('user_data');
+          setUser(null);
         }
-      } else {
-        setIsAdmin(false);
-        setProfilePicture('');
+      } catch (error) {
+        console.error('Error verifying session:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (!isPending) {
-      fetchUserData();
-    }
-  }, [session, isPending]);
+    checkAuth();
+  }, []);
 
-  const handleSignOut = async () => {
-    const { error } = await authClient.signOut();
-    if (error?.code) {
-      toast.error(error.code);
-    } else {
-      localStorage.removeItem('bearer_token');
-      setProfilePicture('');
-      refetch();
-      router.push('/');
-      toast.success('Logged out successfully');
-    }
+  const handleSignOut = () => {
+    localStorage.removeItem('session_token');
+    localStorage.removeItem('user_data');
+    setUser(null);
+    router.push('/');
+    toast.success('Logged out successfully');
   };
+
+  const isAdmin = user?.role === 'admin';
 
   return (
     <nav className="w-full border-b bg-white sticky top-0 z-50">
@@ -99,7 +95,7 @@ export default function Navbar() {
             <Link href="/listings" className="text-sm font-medium hover:text-primary transition-colors">
               Listings
             </Link>
-            {session?.user && (
+            {user && (
               <Link href="/my-bookings" className="text-sm font-medium hover:text-primary transition-colors">
                 My Bookings
               </Link>
@@ -113,14 +109,16 @@ export default function Navbar() {
 
           {/* Auth Section */}
           <div className="flex items-center gap-3">
-            {session?.user ? (
+            {loading ? (
+              <div className="w-20 h-9 bg-gray-200 animate-pulse rounded-md"></div>
+            ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2 relative">
-                    {profilePicture ? (
+                    {user.profilePicture ? (
                       <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/20">
                         <Image
-                          src={profilePicture}
+                          src={user.profilePicture}
                           alt="Profile"
                           width={32}
                           height={32}
@@ -133,7 +131,7 @@ export default function Navbar() {
                       </div>
                     )}
                     <span className="text-sm font-medium">
-                      {session.user.name || session.user.email}
+                      {user.firstName} {user.lastName}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { bookings } from '@/db/schema';
+import { bookings, userSessions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
@@ -10,25 +9,43 @@ export async function GET(
 ) {
   try {
     // Authentication check
-    const session = await auth.api.getSession({ headers: request.headers });
+    const authHeader = request.headers.get('Authorization');
     
-    if (!session) {
-      const authHeader = request.headers.get('Authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return NextResponse.json(
-          { 
-            error: 'Authentication required',
-            code: 'MISSING_AUTH_TOKEN'
-          },
-          { status: 401 }
-        );
-      }
-      
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { 
+          error: 'Authentication required',
+          code: 'MISSING_AUTH_TOKEN'
+        },
+        { status: 401 }
+      );
+    }
+
+    const sessionToken = authHeader.substring(7);
+
+    // Verify session
+    const sessionRecords = await db
+      .select()
+      .from(userSessions)
+      .where(eq(userSessions.token, sessionToken))
+      .limit(1);
+
+    if (sessionRecords.length === 0) {
       return NextResponse.json(
         { 
           error: 'Invalid or expired session',
           code: 'INVALID_SESSION'
         },
+        { status: 401 }
+      );
+    }
+
+    const session = sessionRecords[0];
+
+    // Check if session is expired
+    if (new Date(session.expiresAt) < new Date()) {
+      return NextResponse.json(
+        { error: 'Session expired', code: 'SESSION_EXPIRED' },
         { status: 401 }
       );
     }

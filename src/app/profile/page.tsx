@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,11 +10,20 @@ import { User, Upload, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
+interface UserData {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  profilePicture: string | null;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
-  const { data: session, isPending, refetch } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
@@ -26,23 +34,38 @@ export default function ProfilePage() {
   const [previewImage, setPreviewImage] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Redirect if not authenticated
+  // Check authentication and fetch profile data
   useEffect(() => {
-    if (!isPending && !session?.user) {
-      router.push('/login');
-    }
-  }, [session, isPending, router]);
-
-  // Fetch profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!session?.user) return;
+    const checkAuthAndFetchProfile = async () => {
+      const sessionToken = localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        router.push('/login?redirect=/profile');
+        return;
+      }
 
       try {
-        const token = localStorage.getItem('bearer_token');
+        // Verify session
+        const verifyResponse = await fetch('/api/auth/verify-session', {
+          headers: {
+            'Authorization': `Bearer ${sessionToken}`,
+          },
+        });
+
+        if (!verifyResponse.ok) {
+          localStorage.removeItem('session_token');
+          localStorage.removeItem('user_data');
+          router.push('/login?redirect=/profile');
+          return;
+        }
+
+        const { user: verifiedUser } = await verifyResponse.json();
+        setUser(verifiedUser);
+
+        // Fetch profile data
         const response = await fetch('/api/profile', {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${sessionToken}`,
           },
         });
 
@@ -57,15 +80,14 @@ export default function ProfilePage() {
         }
       } catch (error) {
         toast.error('Error loading profile');
+        router.push('/login?redirect=/profile');
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (session?.user) {
-      fetchProfile();
-    }
-  }, [session]);
+    checkAuthAndFetchProfile();
+  }, [router]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,7 +130,7 @@ export default function ProfilePage() {
     setIsSaving(true);
 
     try {
-      const token = localStorage.getItem('bearer_token');
+      const token = localStorage.getItem('session_token');
       const response = await fetch('/api/profile', {
         method: 'PUT',
         headers: {
@@ -125,7 +147,12 @@ export default function ProfilePage() {
       if (response.ok) {
         const updatedData = await response.json();
         setProfileData(updatedData);
-        await refetch();
+        setUser({
+          ...user!,
+          firstName: updatedData.firstName,
+          lastName: updatedData.lastName,
+          profilePicture: updatedData.profilePicture,
+        });
         toast.success('Profile updated successfully!');
       } else {
         const error = await response.json();
@@ -140,7 +167,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isPending || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -148,7 +175,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!session?.user) {
+  if (!user) {
     return null;
   }
 

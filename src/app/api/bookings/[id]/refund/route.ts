@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { bookings, transactions, users } from '@/db/schema';
+import { bookings, transactions, users, userSessions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
 
 export async function POST(
   request: NextRequest,
@@ -10,14 +9,56 @@ export async function POST(
 ) {
   try {
     // Authentication check
-    const session = await auth.api.getSession({ headers: request.headers });
+    const authHeader = request.headers.get('Authorization');
     
-    if (!session) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Authentication required', code: 'INVALID_SESSION' },
         { status: 401 }
       );
     }
+
+    const sessionToken = authHeader.substring(7);
+
+    // Verify session
+    const sessionRecords = await db
+      .select()
+      .from(userSessions)
+      .where(eq(userSessions.token, sessionToken))
+      .limit(1);
+
+    if (sessionRecords.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid session', code: 'INVALID_SESSION' },
+        { status: 401 }
+      );
+    }
+
+    const session = sessionRecords[0];
+
+    // Check if session is expired
+    if (new Date(session.expiresAt) < new Date()) {
+      return NextResponse.json(
+        { error: 'Session expired', code: 'SESSION_EXPIRED' },
+        { status: 401 }
+      );
+    }
+
+    // Get user from session
+    const userRecords = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+
+    if (userRecords.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found', code: 'USER_NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    const userId = userRecords[0].id;
 
     // Validate booking ID
     const { id } = params;
@@ -60,22 +101,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    // Get integer user ID from users table using session email
-    const userRecords = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, session.user.email))
-      .limit(1);
-
-    if (userRecords.length === 0) {
-      return NextResponse.json(
-        { error: 'User not found', code: 'USER_NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
-    const userId = userRecords[0].id;
 
     // Update booking status to refunded
     const updatedBooking = await db

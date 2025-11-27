@@ -1,41 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { users, userSessions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
+
+async function verifySession(request: NextRequest) {
+  const authHeader = request.headers.get('Authorization');
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const sessionToken = authHeader.substring(7);
+
+  // Verify session
+  const sessionRecords = await db
+    .select()
+    .from(userSessions)
+    .where(eq(userSessions.token, sessionToken))
+    .limit(1);
+
+  if (sessionRecords.length === 0) {
+    return null;
+  }
+
+  const session = sessionRecords[0];
+
+  // Check if session is expired
+  if (new Date(session.expiresAt) < new Date()) {
+    return null;
+  }
+
+  // Get user
+  const userRecords = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, session.userId))
+    .limit(1);
+
+  if (userRecords.length === 0) {
+    return null;
+  }
+
+  return userRecords[0];
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
+    const user = await verifySession(request);
     
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ 
         error: 'Authentication required', 
         code: 'UNAUTHORIZED' 
       }, { status: 401 });
     }
 
-    const user = await db.select({
-      id: users.id,
-      email: users.email,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      role: users.role,
-      profilePicture: users.profilePicture,
-      createdAt: users.createdAt
-    })
-      .from(users)
-      .where(eq(users.email, session.user.email))
-      .limit(1);
-
-    if (user.length === 0) {
-      return NextResponse.json({ 
-        error: 'User not found', 
-        code: 'USER_NOT_FOUND' 
-      }, { status: 404 });
-    }
-
-    return NextResponse.json(user[0], { status: 200 });
+    return NextResponse.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      profilePicture: user.profilePicture,
+      createdAt: user.createdAt
+    }, { status: 200 });
   } catch (error) {
     console.error('GET error:', error);
     return NextResponse.json({ 
@@ -46,9 +74,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
+    const user = await verifySession(request);
     
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ 
         error: 'Authentication required', 
         code: 'UNAUTHORIZED' 
@@ -93,21 +121,9 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const existingUser = await db.select()
-      .from(users)
-      .where(eq(users.email, session.user.email))
-      .limit(1);
-
-    if (existingUser.length === 0) {
-      return NextResponse.json({ 
-        error: 'User not found', 
-        code: 'USER_NOT_FOUND' 
-      }, { status: 404 });
-    }
-
     const updated = await db.update(users)
       .set(updates)
-      .where(eq(users.email, session.user.email))
+      .where(eq(users.id, user.id))
       .returning({
         id: users.id,
         email: users.email,
