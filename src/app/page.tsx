@@ -33,7 +33,8 @@ export default function HomePage() {
     loop: false,
     align: 'start',
     skipSnaps: false,
-    dragFree: false,
+    dragFree: true,
+    containScroll: 'trimSnaps',
   });
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
