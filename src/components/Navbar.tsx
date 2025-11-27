@@ -28,10 +28,10 @@ export default function Navbar() {
             <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors !whitespace-pre-line">
 
             </Link>
-            <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors !whitespace-pre-line">
 
             </Link>
-            <Link href="/admin" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/admin" className="text-sm font-medium hover:text-primary transition-colors !w-[12.9%] !h-full">
               Admin
             </Link>
           </div>
