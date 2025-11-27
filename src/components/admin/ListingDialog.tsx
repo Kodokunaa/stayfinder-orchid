@@ -113,7 +113,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
         numGuests: parseInt(formData.numGuests),
         numBedrooms: parseInt(formData.numBedrooms),
         numBeds: parseInt(formData.numBeds),
-        numBathrooms: parseInt(formData.numBathrooms),
+        numBathrooms: parseFloat(formData.numBathrooms),
         images,
         userId: userId,
         featured: formData.featured,
@@ -186,7 +186,8 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
               <Input
                 id="pricePerNight"
                 type="number"
-                min="1"
+                min="0"
+                step="1"
                 value={formData.pricePerNight}
                 onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
                 required
@@ -198,7 +199,8 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
               <Input
                 id="numGuests"
                 type="number"
-                min="1"
+                min="0"
+                step="1"
                 value={formData.numGuests}
                 onChange={(e) => setFormData({ ...formData, numGuests: e.target.value })}
                 required
@@ -211,6 +213,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
                 id="numBedrooms"
                 type="number"
                 min="0"
+                step="1"
                 value={formData.numBedrooms}
                 onChange={(e) => setFormData({ ...formData, numBedrooms: e.target.value })}
                 required
@@ -222,7 +225,8 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
               <Input
                 id="numBeds"
                 type="number"
-                min="1"
+                min="0"
+                step="1"
                 value={formData.numBeds}
                 onChange={(e) => setFormData({ ...formData, numBeds: e.target.value })}
                 required
@@ -234,7 +238,8 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
               <Input
                 id="numBathrooms"
                 type="number"
-                min="1"
+                min="0"
+                step="0.5"
                 value={formData.numBathrooms}
                 onChange={(e) => setFormData({ ...formData, numBathrooms: e.target.value })}
                 required
