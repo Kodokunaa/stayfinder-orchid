@@ -84,6 +84,7 @@ export const listings = sqliteTable('listings', {
   numBathrooms: integer('num_bathrooms').notNull(),
   images: text('images', { mode: 'json' }).notNull(),
   userId: integer('user_id').notNull().references(() => users.id),
+  status: text('status').notNull().default('available'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

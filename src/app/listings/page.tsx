@@ -15,6 +15,7 @@ interface Listing {
   pricePerNight: number;
   numGuests: number;
   numBeds: number;
+  status: string;
 }
 
 export default function ListingsPage() {
@@ -44,6 +45,7 @@ export default function ListingsPage() {
         pricePerNight: listing.pricePerNight,
         numGuests: listing.numGuests,
         numBeds: listing.numBeds,
+        status: listing.status || 'available',
       }));
       
       setListings(formattedListings);

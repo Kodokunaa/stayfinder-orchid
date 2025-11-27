@@ -19,6 +19,7 @@ interface Listing {
   numBedrooms: number;
   numBeds: number;
   numBathrooms: number;
+  status: string;
 }
 
 export default function PropertyPage() {

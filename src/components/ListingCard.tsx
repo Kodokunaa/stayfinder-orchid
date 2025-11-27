@@ -12,6 +12,7 @@ interface ListingCardProps {
   pricePerNight: number;
   numGuests: number;
   numBeds: number;
+  status?: string;
 }
 
 export default function ListingCard({
@@ -21,8 +22,10 @@ export default function ListingCard({
   pricePerNight,
   numGuests,
   numBeds,
+  status = 'available',
 }: ListingCardProps) {
   const mainImage = images[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800';
+  const isBooked = status === 'booked';
 
   return (
     <Link href={`/property/${id}`}>
@@ -35,6 +38,16 @@ export default function ListingCard({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          {isBooked && (
+            <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+              Booked
+            </div>
+          )}
+          {!isBooked && (
+            <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+              Available
+            </div>
+          )}
         </div>
         <CardContent className="p-4">
           <h3 className="font-semibold text-lg mb-2 line-clamp-1">{title}</h3>

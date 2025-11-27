@@ -10,15 +10,17 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Separator } from './ui/separator';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { CreditCard, DollarSign, CalendarIcon } from 'lucide-react';
+import { CreditCard, DollarSign, CalendarIcon, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription } from './ui/alert';
 
 interface PaymentSidebarProps {
   listing: {
     id: number;
     pricePerNight: number;
+    status: string;
   };
 }
 
@@ -45,6 +47,8 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
   const [cardholderName, setCardholderName] = useState('');
   const [paypalEmail, setPaypalEmail] = useState('');
   const [paypalPassword, setPaypalPassword] = useState('');
+
+  const isBooked = listing.status === 'booked';
 
   // Check authentication on mount
   useEffect(() => {
@@ -162,6 +166,14 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
   };
 
   const handleProceedToPayment = () => {
+    // Check if listing is already booked
+    if (isBooked) {
+      toast.error('Property is not available', {
+        description: 'This property has already been booked',
+      });
+      return;
+    }
+
     // Check if user is logged in first
     if (!user) {
       toast.error('Please log in to continue', {
@@ -185,6 +197,15 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
   };
 
   const handleCompleteBooking = async () => {
+    // Double-check listing availability
+    if (isBooked) {
+      toast.error('Property is not available', {
+        description: 'This property has already been booked',
+      });
+      setShowPaymentForm(false);
+      return;
+    }
+
     // Double-check authentication before booking
     if (!user) {
       toast.error('Session expired. Please log in again.');
@@ -221,6 +242,17 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
 
       if (!bookingResponse.ok) {
         const errorData = await bookingResponse.json();
+        
+        // Check if listing was already booked
+        if (errorData.code === 'LISTING_ALREADY_BOOKED') {
+          toast.error('Property is no longer available', {
+            description: 'This property was just booked by another user',
+          });
+          // Refresh the page to update the status
+          window.location.reload();
+          return;
+        }
+        
         throw new Error(errorData.error || 'Failed to create booking');
       }
 
@@ -281,9 +313,25 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
             <span className="text-base font-normal text-gray-600"> / night</span>
           </span>
         </CardTitle>
+        {isBooked && (
+          <div className="mt-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+              Already Booked
+            </span>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent className="space-y-6">
+        {isBooked && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              This property has already been booked and is not available for new reservations.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {!showPaymentForm ? (
           <>
             <div className="space-y-4">
@@ -295,6 +343,7 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
+                      disabled={isBooked}
                       className={cn(
                         "w-full justify-start text-left font-normal",
                         !dateRange.from && "text-muted-foreground"
@@ -366,23 +415,23 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
 
             <div>
               <Label className="text-base font-semibold mb-3 block">Payment Method</Label>
-              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} disabled={isBooked}>
                 <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <RadioGroupItem value="credit" id="credit" />
+                  <RadioGroupItem value="credit" id="credit" disabled={isBooked} />
                   <Label htmlFor="credit" className="flex items-center gap-2 cursor-pointer flex-1">
                     <CreditCard className="w-5 h-5" />
                     Credit Card
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <RadioGroupItem value="debit" id="debit" />
+                  <RadioGroupItem value="debit" id="debit" disabled={isBooked} />
                   <Label htmlFor="debit" className="flex items-center gap-2 cursor-pointer flex-1">
                     <CreditCard className="w-5 h-5" />
                     Debit Card
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <RadioGroupItem value="paypal" id="paypal" />
+                  <RadioGroupItem value="paypal" id="paypal" disabled={isBooked} />
                   <Label htmlFor="paypal" className="flex items-center gap-2 cursor-pointer flex-1">
                     <DollarSign className="w-5 h-5" />
                     PayPal
@@ -395,9 +444,9 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
               onClick={handleProceedToPayment} 
               className="w-full" 
               size="lg"
-              disabled={!dateRange.from || !dateRange.to || numNights === 0}
+              disabled={!dateRange.from || !dateRange.to || numNights === 0 || isBooked}
             >
-              Proceed to Payment
+              {isBooked ? 'Not Available' : 'Proceed to Payment'}
             </Button>
           </>
         ) : (

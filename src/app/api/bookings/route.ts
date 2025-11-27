@@ -209,6 +209,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check if listing exists and get its status
+    const listing = await db
+      .select()
+      .from(listings)
+      .where(eq(listings.id, parseInt(listingId)))
+      .limit(1);
+
+    if (listing.length === 0) {
+      return NextResponse.json(
+        { error: 'Listing not found', code: 'LISTING_NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    // Check if listing is already booked
+    if (listing[0].status === 'booked') {
+      return NextResponse.json(
+        { error: 'Listing is already booked', code: 'LISTING_ALREADY_BOOKED' },
+        { status: 400 }
+      );
+    }
+
+    const bookingStatus = status || 'pending';
+
     // Create booking
     const newBooking = await db
       .insert(bookings)
@@ -222,10 +246,21 @@ export async function POST(request: NextRequest) {
         tax: parseInt(tax),
         total: parseInt(total),
         paymentMethod: paymentMethod.trim(),
-        status: status || 'pending',
+        status: bookingStatus,
         createdAt: new Date().toISOString()
       })
       .returning();
+
+    // If booking is confirmed, update listing status to booked
+    if (bookingStatus === 'confirmed') {
+      await db
+        .update(listings)
+        .set({
+          status: 'booked',
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(listings.id, parseInt(listingId)));
+    }
 
     return NextResponse.json(newBooking[0], { status: 201 });
   } catch (error) {
@@ -293,8 +328,17 @@ export async function PUT(request: NextRequest) {
       .where(eq(bookings.id, parseInt(id)))
       .returning();
 
-    // If status changed to 'cancelled', create refund transaction
+    // If status changed to 'cancelled', update listing status to 'available' and create refund transaction
     if (status === 'cancelled' && booking.status !== 'cancelled') {
+      // Update listing status to available
+      await db
+        .update(listings)
+        .set({
+          status: 'available',
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(listings.id, booking.listingId));
+
       // Get listing title for description
       const listingResult = await db
         .select()
@@ -304,12 +348,12 @@ export async function PUT(request: NextRequest) {
 
       const listingTitle = listingResult.length > 0 ? listingResult[0].title : `Listing #${booking.listingId}`;
 
-      // Create refund transaction with positive amount (no id field, it auto-increments)
+      // Create refund transaction with positive amount
       await db.insert(transactions).values({
         userId: booking.userId,
         bookingId: booking.id,
         listingId: booking.listingId,
-        amount: booking.total, // Positive amount for refund
+        amount: booking.total,
         type: 'refund',
         description: `Refund for cancelled booking at ${listingTitle}`,
         createdAt: new Date().toISOString(),
