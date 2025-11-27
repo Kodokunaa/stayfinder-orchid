@@ -4,10 +4,12 @@ import { bearer } from "better-auth/plugins";
 import { NextRequest } from 'next/server';
 import { headers } from "next/headers"
 import { db } from "@/db";
+import * as schema from "@/db/schema";
  
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 		provider: "sqlite",
+		schema,
 	}),
 	emailAndPassword: {    
 		enabled: true

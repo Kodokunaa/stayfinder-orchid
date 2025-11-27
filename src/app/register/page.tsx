@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ const getErrorMessage = (code: string) => {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -56,29 +57,54 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await authClient.signUp.email({
+      // Step 1: Register the user
+      const { error: signUpError } = await authClient.signUp.email({
         email: formData.email,
         name: `${formData.firstName} ${formData.lastName}`,
         password: formData.password,
       });
 
-      if (error?.code) {
+      if (signUpError?.code) {
         toast.error('Registration failed', {
-          description: getErrorMessage(error.code),
+          description: getErrorMessage(signUpError.code),
         });
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 2: Automatically log in the user
+      const { error: signInError } = await authClient.signIn.email({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: true,
+      });
+
+      if (signInError?.code) {
+        toast.success('Account created!', {
+          description: 'Please log in with your credentials.',
+        });
+        router.push('/login?registered=true');
         return;
       }
 
       toast.success('Account created!', {
-        description: 'Please log in with your credentials.',
+        description: 'You are now logged in. Welcome to StayFinder!',
       });
 
-      router.push('/login?registered=true');
+      // Wait a moment to ensure token is stored
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Redirect to the specified page or default to home
+      const redirect = searchParams.get('redirect');
+      if (redirect && redirect.startsWith('/')) {
+        window.location.href = redirect;
+      } else {
+        window.location.href = '/';
+      }
     } catch (error) {
       toast.error('Registration failed', {
         description: 'An unexpected error occurred. Please try again.',
       });
-    } finally {
       setIsLoading(false);
     }
   };
