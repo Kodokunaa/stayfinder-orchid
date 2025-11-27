@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Home, LogIn, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -91,99 +91,118 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          <Link href="/" className="flex items-center justify-center gap-2 text-2xl font-bold text-primary mx-auto">
-            <Home className="w-8 h-8" />
-            <span>StayFinder</span>
-          </Link>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Log in to your account to continue</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+    <Card className="w-full max-w-md">
+      <CardHeader className="space-y-2 text-center">
+        <Link href="/" className="flex items-center justify-center gap-2 text-2xl font-bold text-primary mx-auto">
+          <Home className="w-8 h-8" />
+          <span>StayFinder</span>
+        </Link>
+        <CardTitle className="text-2xl">Welcome Back</CardTitle>
+        <CardDescription>Log in to your account to continue</CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              autoComplete="email"
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
               <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
-                autoComplete="email"
+                autoComplete="off"
+                className="pr-10"
                 disabled={isLoading}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  autoComplete="off"
-                  className="pr-10"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={formData.rememberMe}
-                onCheckedChange={(checked) => 
-                  setFormData({ ...formData, rememberMe: checked as boolean })
-                }
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 disabled={isLoading}
-              />
-              <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer">
-                Remember me
-              </Label>
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-3 pt-6">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                'Logging in...'
-              ) : (
-                <>
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Log In
-                </>
-              )}
-            </Button>
-            <div className="text-sm text-center text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-primary font-medium hover:underline">
-                Create an account
-              </Link>
-            </div>
-          </CardFooter>
-        </form>
-      </Card>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="rememberMe"
+              checked={formData.rememberMe}
+              onCheckedChange={(checked) => 
+                setFormData({ ...formData, rememberMe: checked as boolean })
+              }
+              disabled={isLoading}
+            />
+            <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer">
+              Remember me
+            </Label>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-3 pt-6">
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              'Logging in...'
+            ) : (
+              <>
+                <LogIn className="w-4 h-4 mr-2" />
+                Log In
+              </>
+            )}
+          </Button>
+          <div className="text-sm text-center text-muted-foreground">
+            Don't have an account?{' '}
+            <Link href="/register" className="text-primary font-medium hover:underline">
+              Create an account
+            </Link>
+          </div>
+        </CardFooter>
+      </form>
+    </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4">
+      <Suspense fallback={
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-2 text-center">
+            <Link href="/" className="flex items-center justify-center gap-2 text-2xl font-bold text-primary mx-auto">
+              <Home className="w-8 h-8" />
+              <span>StayFinder</span>
+            </Link>
+            <CardTitle className="text-2xl">Welcome Back</CardTitle>
+            <CardDescription>Loading...</CardDescription>
+          </CardHeader>
+        </Card>
+      }>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }
