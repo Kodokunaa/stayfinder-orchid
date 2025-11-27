@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1764058367086,
+      "tag": "0000_tranquil_captain_flint",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1764059138708,
+      "tag": "0001_whole_roxanne_simpson",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1764155011600,
+      "tag": "0002_lazy_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1764209715261,
+      "tag": "0003_old_daredevil",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1764211382766,
+      "tag": "0004_gorgeous_rictor",
+      "breakpoints": true
+    }
+  ]
+}

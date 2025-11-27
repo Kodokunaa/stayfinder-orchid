@@ -1,0 +1,223 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { MultiImageUpload } from '@/components/ui/multi-image-upload';
+import { toast } from 'sonner';
+
+interface ListingDialogProps {
+  open: boolean;
+  onClose: (shouldRefresh: boolean) => void;
+  listing: any | null;
+}
+
+export default function ListingDialog({ open, onClose, listing }: ListingDialogProps) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    pricePerNight: '',
+    numGuests: '',
+    numBedrooms: '',
+    numBeds: '',
+    numBathrooms: '',
+  });
+  const [images, setImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (listing) {
+      setFormData({
+        title: listing.title,
+        description: listing.description,
+        pricePerNight: listing.pricePerNight.toString(),
+        numGuests: listing.numGuests.toString(),
+        numBedrooms: listing.numBedrooms.toString(),
+        numBeds: listing.numBeds.toString(),
+        numBathrooms: listing.numBathrooms.toString(),
+      });
+      setImages(Array.isArray(listing.images) ? listing.images : []);
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        pricePerNight: '',
+        numGuests: '',
+        numBedrooms: '',
+        numBeds: '',
+        numBathrooms: '',
+      });
+      setImages([]);
+    }
+  }, [listing, open]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (images.length === 0) {
+      toast.error('Please add at least one image');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        pricePerNight: parseInt(formData.pricePerNight),
+        numGuests: parseInt(formData.numGuests),
+        numBedrooms: parseInt(formData.numBedrooms),
+        numBeds: parseInt(formData.numBeds),
+        numBathrooms: parseInt(formData.numBathrooms),
+        images,
+        userId: 1, // Default to admin user
+      };
+
+      const url = listing ? `/api/listings?id=${listing.id}` : '/api/listings';
+      const method = listing ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(listing ? 'Listing updated successfully' : 'Listing created successfully');
+        onClose(true);
+      } else {
+        console.error('API Error:', data);
+        toast.error(data.error || 'Error saving listing');
+      }
+    } catch (error) {
+      console.error('Error saving listing:', error);
+      toast.error('Error saving listing. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={() => onClose(false)}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{listing ? 'Edit Listing' : 'Add New Listing'}</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="Beautiful apartment in downtown"
+              required
+              minLength={10}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe your property..."
+              rows={4}
+              required
+              minLength={20}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="pricePerNight">Price per Night ($)</Label>
+              <Input
+                id="pricePerNight"
+                type="number"
+                min="1"
+                value={formData.pricePerNight}
+                onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="numGuests">Number of Guests</Label>
+              <Input
+                id="numGuests"
+                type="number"
+                min="1"
+                value={formData.numGuests}
+                onChange={(e) => setFormData({ ...formData, numGuests: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="numBedrooms">Number of Bedrooms</Label>
+              <Input
+                id="numBedrooms"
+                type="number"
+                min="0"
+                value={formData.numBedrooms}
+                onChange={(e) => setFormData({ ...formData, numBedrooms: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="numBeds">Number of Beds</Label>
+              <Input
+                id="numBeds"
+                type="number"
+                min="1"
+                value={formData.numBeds}
+                onChange={(e) => setFormData({ ...formData, numBeds: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="numBathrooms">Number of Bathrooms</Label>
+              <Input
+                id="numBathrooms"
+                type="number"
+                min="1"
+                value={formData.numBathrooms}
+                onChange={(e) => setFormData({ ...formData, numBathrooms: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Property Images (Required)</Label>
+            <MultiImageUpload value={images} onChange={setImages} maxImages={10} className="mt-2" />
+            <p className="text-sm text-muted-foreground mt-1">
+              Upload at least 1 image (max 10). First image will be the cover.
+            </p>
+          </div>
+
+          <div className="flex gap-2 justify-end pt-4">
+            <Button type="button" variant="outline" onClick={() => onClose(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || images.length === 0}>
+              {loading ? 'Saving...' : listing ? 'Update Listing' : 'Create Listing'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
