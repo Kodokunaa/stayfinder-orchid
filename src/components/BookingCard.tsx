@@ -61,7 +61,7 @@ export default function BookingCard({ booking, onCancel, onRefresh }: BookingCar
         {/* Image */}
         <div className="relative w-full md:w-64 h-48 md:h-auto flex-shrink-0">
           <Image
-            src={booking.listing?.images[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'}
+            src={booking.listing?.images?.[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'}
             alt={booking.listing?.title || 'Property'}
             fill
             className="object-cover"
