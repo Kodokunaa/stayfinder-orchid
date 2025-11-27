@@ -2,41 +2,48 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 
 async function main() {
+    const now = new Date();
+    
     const sampleUsers = [
         {
+            firstName: 'Admin',
+            lastName: 'User',
             email: 'admin@airbnb.com',
-            name: 'Admin User',
             role: 'admin',
             image: 'https://i.pravatar.cc/150?img=1',
-            createdAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
+            createdAt: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString(),
         },
         {
+            firstName: 'John',
+            lastName: 'Smith',
             email: 'john.smith@email.com',
-            name: 'John Smith',
             role: 'user',
             image: 'https://i.pravatar.cc/150?img=12',
-            createdAt: new Date(Date.now() - 145 * 24 * 60 * 60 * 1000).toISOString(),
+            createdAt: new Date(now.getTime() - 145 * 24 * 60 * 60 * 1000).toISOString(),
         },
         {
+            firstName: 'Sarah',
+            lastName: 'Johnson',
             email: 'sarah.j@email.com',
-            name: 'Sarah Johnson',
             role: 'user',
             image: 'https://i.pravatar.cc/150?img=45',
-            createdAt: new Date(Date.now() - 98 * 24 * 60 * 60 * 1000).toISOString(),
+            createdAt: new Date(now.getTime() - 98 * 24 * 60 * 60 * 1000).toISOString(),
         },
         {
+            firstName: 'Michael',
+            lastName: 'Chen',
             email: 'michael.chen@email.com',
-            name: 'Michael Chen',
             role: 'user',
             image: 'https://i.pravatar.cc/150?img=33',
-            createdAt: new Date(Date.now() - 62 * 24 * 60 * 60 * 1000).toISOString(),
+            createdAt: new Date(now.getTime() - 62 * 24 * 60 * 60 * 1000).toISOString(),
         },
         {
+            firstName: 'Emma',
+            lastName: 'Williams',
             email: 'emma.w@email.com',
-            name: 'Emma Williams',
             role: 'user',
             image: 'https://i.pravatar.cc/150?img=25',
-            createdAt: new Date(Date.now() - 34 * 24 * 60 * 60 * 1000).toISOString(),
+            createdAt: new Date(now.getTime() - 34 * 24 * 60 * 60 * 1000).toISOString(),
         }
     ];
 
