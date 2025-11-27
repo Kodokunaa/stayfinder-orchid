@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -22,8 +22,17 @@ interface PaymentSidebarProps {
   };
 }
 
+interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [paymentMethod, setPaymentMethod] = useState('credit');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -37,8 +46,39 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
   const [paypalEmail, setPaypalEmail] = useState('');
   const [paypalPassword, setPaypalPassword] = useState('');
 
-  // Use default user ID 1
-  const DEFAULT_USER_ID = 1;
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const sessionToken = localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        setUser(null);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/verify-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionToken }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error verifying session:', error);
+        setUser(null);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const numNights = dateRange.from && dateRange.to 
     ? differenceInDays(dateRange.to, dateRange.from) 
@@ -122,6 +162,15 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
   };
 
   const handleProceedToPayment = () => {
+    // Check if user is logged in first
+    if (!user) {
+      toast.error('Please log in to continue', {
+        description: 'You need to be logged in to make a booking',
+      });
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
     if (!dateRange.from || !dateRange.to) {
       toast.error('Please select check-in and check-out dates');
       return;
@@ -136,6 +185,13 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
   };
 
   const handleCompleteBooking = async () => {
+    // Double-check authentication before booking
+    if (!user) {
+      toast.error('Session expired. Please log in again.');
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
     // Validate payment form
     if (!validatePaymentForm()) {
       return;
@@ -143,7 +199,7 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
 
     setIsSubmitting(true);
     try {
-      // Create booking with default user ID
+      // Create booking with actual logged-in user ID
       const bookingResponse = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
@@ -151,7 +207,7 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
         },
         body: JSON.stringify({
           listingId: listing.id,
-          userId: DEFAULT_USER_ID,
+          userId: user.id,
           checkInDate: dateRange.from?.toISOString(),
           checkOutDate: dateRange.to?.toISOString(),
           numNights,
@@ -177,7 +233,7 @@ export default function PaymentSidebar({ listing }: PaymentSidebarProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: DEFAULT_USER_ID,
+          userId: user.id,
           amount: -Math.round(total * 100), // Negative for payment
           type: 'booking',
           description: `Payment for booking #${booking.id}`,
