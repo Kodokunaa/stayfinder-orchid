@@ -25,11 +25,11 @@ export default function Navbar() {
             <Link href="/my-bookings" className="text-sm font-medium hover:text-primary transition-colors">
               My Bookings
             </Link>
-            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors">
-              Contact
+            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors !whitespace-pre-line">
+
             </Link>
             <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors">
-              About
+
             </Link>
             <Link href="/admin" className="text-sm font-medium hover:text-primary transition-colors">
               Admin
@@ -37,6 +37,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
-  );
+    </nav>);
+
 }
