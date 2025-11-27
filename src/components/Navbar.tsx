@@ -97,11 +97,6 @@ export default function Navbar() {
             <Link href="/listings" className="text-sm font-medium hover:text-primary transition-colors">
               Listings
             </Link>
-            {user && (
-              <Link href="/my-bookings" className="text-sm font-medium hover:text-primary transition-colors">
-                My Bookings
-              </Link>
-            )}
             {isAdmin && (
               <Link href="/admin" className="text-sm font-medium hover:text-primary transition-colors">
                 Admin

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { bookings } from '@/db/schema';
+import { bookings, transactions, listings } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -282,6 +282,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const booking = existing[0];
+
     // Update booking
     const updated = await db
       .update(bookings)
@@ -290,6 +292,29 @@ export async function PUT(request: NextRequest) {
       })
       .where(eq(bookings.id, parseInt(id)))
       .returning();
+
+    // If status changed to 'cancelled', create refund transaction
+    if (status === 'cancelled' && booking.status !== 'cancelled') {
+      // Get listing title for description
+      const listingResult = await db
+        .select()
+        .from(listings)
+        .where(eq(listings.id, booking.listingId))
+        .limit(1);
+
+      const listingTitle = listingResult.length > 0 ? listingResult[0].title : `Listing #${booking.listingId}`;
+
+      // Create refund transaction with positive amount (no id field, it auto-increments)
+      await db.insert(transactions).values({
+        userId: booking.userId,
+        bookingId: booking.id,
+        listingId: booking.listingId,
+        amount: booking.total, // Positive amount for refund
+        type: 'refund',
+        description: `Refund for cancelled booking at ${listingTitle}`,
+        createdAt: new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json(updated[0], { status: 200 });
   } catch (error) {

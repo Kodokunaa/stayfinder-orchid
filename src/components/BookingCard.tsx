@@ -17,8 +17,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from './ui/alert-dialog';
-import { useState } from 'react';
-import { toast } from 'sonner';
 
 interface BookingCardProps {
   booking: {
@@ -42,8 +40,6 @@ interface BookingCardProps {
 }
 
 export default function BookingCard({ booking, onCancel, onRefresh }: BookingCardProps) {
-  const [isRefunding, setIsRefunding] = useState(false);
-
   const statusColors = {
     confirmed: 'bg-green-100 text-green-800',
     pending: 'bg-yellow-100 text-yellow-800',
@@ -57,42 +53,6 @@ export default function BookingCard({ booking, onCancel, onRefresh }: BookingCar
       day: 'numeric',
       year: 'numeric',
     });
-  };
-
-  const handleRefund = async () => {
-    setIsRefunding(true);
-    try {
-      const token = localStorage.getItem('bearer_token');
-      const response = await fetch(`/api/bookings/${booking.id}/refund`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to process refund');
-      }
-
-      const result = await response.json();
-      toast.success('Refund processed!', {
-        description: `$${(result.transaction.amount / 100).toFixed(2)} has been refunded to your account.`,
-      });
-      
-      // Refresh the bookings list
-      if (onRefresh) {
-        onRefresh();
-      }
-    } catch (error) {
-      console.error('Refund error:', error);
-      toast.error('Refund failed', {
-        description: error instanceof Error ? error.message : 'Please try again or contact support.',
-      });
-    } finally {
-      setIsRefunding(false);
-    }
   };
 
   return (
@@ -172,56 +132,7 @@ export default function BookingCard({ booking, onCancel, onRefresh }: BookingCar
             </div>
             
             <div className="flex gap-2">
-              {booking.status === 'confirmed' && (
-                <>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" disabled={isRefunding}>
-                        Request Refund
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Request Refund</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to request a refund for this booking? 
-                          The full amount of ${(booking.total / 100).toFixed(2)} will be refunded to your account.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleRefund}>
-                          Yes, request refund
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        Cancel Booking
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to cancel this booking? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>No, keep it</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onCancel(booking.id)}>
-                          Yes, cancel booking
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
-
-              {booking.status === 'pending' && (
+              {(booking.status === 'confirmed' || booking.status === 'pending') && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -232,7 +143,7 @@ export default function BookingCard({ booking, onCancel, onRefresh }: BookingCar
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to cancel this booking? This action cannot be undone.
+                        Are you sure you want to cancel this booking? This action cannot be undone and a refund will be processed.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

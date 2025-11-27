@@ -109,8 +109,11 @@ export default function MyBookingsPage() {
       });
       
       if (response.ok) {
-        toast.success('Booking cancelled successfully');
+        toast.success('Booking cancelled successfully', {
+          description: 'A refund has been processed to your account',
+        });
         fetchBookings();
+        fetchTransactions(); // Refresh transactions to show refund
       } else {
         toast.error('Failed to cancel booking');
       }
