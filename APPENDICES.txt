@@ -1,0 +1,1394 @@
+================================================================================
+                        STAYFINDER PROJECT APPENDICES
+================================================================================
+
+This document contains supplementary technical information, reference materials,
+and detailed specifications for the StayFinder accommodation booking platform.
+
+================================================================================
+                            TABLE OF CONTENTS
+================================================================================
+
+APPENDIX A: Environment Variables Reference
+APPENDIX B: Database Schema Details
+APPENDIX C: API Endpoint Summary
+APPENDIX D: Deployment Checklist
+APPENDIX E: Common Issues & Troubleshooting
+APPENDIX F: User Roles and Permissions
+APPENDIX G: Pricing and Tax Calculation
+APPENDIX H: Responsive Breakpoints
+APPENDIX I: Security Best Practices
+APPENDIX J: Feature Roadmap
+APPENDIX K: Testing Procedures
+APPENDIX L: Performance Optimization
+APPENDIX M: Maintenance Guidelines
+APPENDIX N: Support and Contact Information
+
+================================================================================
+                  APPENDIX A: ENVIRONMENT VARIABLES REFERENCE
+================================================================================
+
+Required environment variables for local development and production deployment:
+
+--------------------------------
+A.1 DATABASE CONFIGURATION
+--------------------------------
+
+TURSO_DATABASE_URL=libsql://[your-database-name].turso.io
+  Purpose: Connection URL for Turso database
+  Format: libsql://[database-name].[region].turso.io
+  Required: Yes
+  Example: libsql://stayfinder-db-johnsmith.turso.io
+
+TURSO_AUTH_TOKEN=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
+  Purpose: Authentication token for database access
+  Format: JWT token string
+  Required: Yes
+  Security: Keep secret, rotate periodically
+
+--------------------------------
+A.2 AUTHENTICATION
+--------------------------------
+
+BETTER_AUTH_SECRET=your-random-secret-key-here
+  Purpose: Secret key for session encryption and security
+  Format: Random string (minimum 32 characters recommended)
+  Required: Yes
+  Generation: Use crypto.randomBytes(32).toString('hex')
+
+BETTER_AUTH_URL=http://localhost:3000
+  Purpose: Base URL for authentication callbacks
+  Format: Full URL with protocol
+  Required: Yes
+  Production: https://your-production-domain.com
+
+GOOGLE_CLIENT_ID=123456789-abc123def456.apps.googleusercontent.com
+  Purpose: Google OAuth client identifier
+  Format: Google OAuth Client ID
+  Required: For Google login
+  Source: Google Cloud Console
+
+GOOGLE_CLIENT_SECRET=GOCSPX-AbC123DeF456GhI789JkL012
+  Purpose: Google OAuth client secret
+  Format: Google OAuth Client Secret
+  Required: For Google login
+  Security: Keep secret
+
+--------------------------------
+A.3 APPLICATION SETTINGS
+--------------------------------
+
+NODE_ENV=development
+  Purpose: Environment mode
+  Values: development | production | test
+  Required: No (defaults to development)
+
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+  Purpose: Public-facing application URL
+  Format: Full URL with protocol
+  Required: For client-side API calls
+  Production: https://your-domain.com
+
+--------------------------------
+A.4 SETUP INSTRUCTIONS
+--------------------------------
+
+1. Copy .env.example to .env.local:
+   cp .env.example .env.local
+
+2. Fill in all required values
+
+3. Never commit .env or .env.local files
+
+4. Use different secrets for development and production
+
+5. Rotate secrets regularly for security
+
+================================================================================
+                    APPENDIX B: DATABASE SCHEMA DETAILS
+================================================================================
+
+--------------------------------
+B.1 USERS TABLE
+--------------------------------
+
+Table Name: user
+Purpose: Store user account information and authentication data
+
+Columns:
+  - id (TEXT, PRIMARY KEY)
+    Purpose: Unique user identifier
+    Format: UUID or custom ID
+    Constraints: NOT NULL, UNIQUE
+
+  - name (TEXT, NOT NULL)
+    Purpose: User's full name
+    Validation: 1-100 characters
+
+  - email (TEXT, NOT NULL, UNIQUE)
+    Purpose: User email address for login
+    Validation: Valid email format
+    Constraints: UNIQUE index for fast lookups
+
+  - emailVerified (INTEGER, BOOLEAN)
+    Purpose: Email verification status
+    Values: 0 (false) | 1 (true)
+
+  - image (TEXT)
+    Purpose: Profile picture URL
+    Optional: Yes
+
+  - createdAt (INTEGER, NOT NULL)
+    Purpose: Account creation timestamp
+    Format: Unix timestamp (milliseconds)
+
+  - updatedAt (INTEGER, NOT NULL)
+    Purpose: Last account update timestamp
+    Format: Unix timestamp (milliseconds)
+
+  - role (TEXT, DEFAULT 'user')
+    Purpose: User role for authorization
+    Values: 'user' | 'admin'
+    Constraints: NOT NULL with default
+
+Indexes:
+  - PRIMARY KEY on id
+  - UNIQUE INDEX on email
+
+--------------------------------
+B.2 SESSIONS TABLE
+--------------------------------
+
+Table Name: session
+Purpose: Manage user authentication sessions
+
+Columns:
+  - id (TEXT, PRIMARY KEY)
+  - expiresAt (INTEGER, NOT NULL)
+  - ipAddress (TEXT)
+  - userAgent (TEXT)
+  - userId (TEXT, NOT NULL)
+  - token (TEXT, NOT NULL, UNIQUE)
+  - createdAt (INTEGER, NOT NULL)
+  - updatedAt (INTEGER, NOT NULL)
+
+Foreign Keys:
+  - userId REFERENCES user(id) ON DELETE CASCADE
+
+Indexes:
+  - PRIMARY KEY on id
+  - UNIQUE INDEX on token
+  - INDEX on userId
+
+--------------------------------
+B.3 ACCOUNTS TABLE
+--------------------------------
+
+Table Name: account
+Purpose: Link users with OAuth providers (Google)
+
+Columns:
+  - id (TEXT, PRIMARY KEY)
+  - accountId (TEXT, NOT NULL)
+  - providerId (TEXT, NOT NULL)
+  - userId (TEXT, NOT NULL)
+  - accessToken (TEXT)
+  - refreshToken (TEXT)
+  - idToken (TEXT)
+  - expiresAt (INTEGER)
+  - password (TEXT)
+  - createdAt (INTEGER, NOT NULL)
+  - updatedAt (INTEGER, NOT NULL)
+
+Foreign Keys:
+  - userId REFERENCES user(id) ON DELETE CASCADE
+
+Indexes:
+  - PRIMARY KEY on id
+  - INDEX on userId
+
+--------------------------------
+B.4 VERIFICATION TABLE
+--------------------------------
+
+Table Name: verification
+Purpose: Email verification and password reset tokens
+
+Columns:
+  - id (TEXT, PRIMARY KEY)
+  - identifier (TEXT, NOT NULL)
+  - value (TEXT, NOT NULL)
+  - expiresAt (INTEGER, NOT NULL)
+  - createdAt (INTEGER)
+  - updatedAt (INTEGER)
+
+Indexes:
+  - PRIMARY KEY on id
+  - INDEX on identifier
+
+--------------------------------
+B.5 LISTINGS TABLE
+--------------------------------
+
+Table Name: listings
+Purpose: Store property listings and details
+
+Columns:
+  - id (INTEGER, PRIMARY KEY AUTOINCREMENT)
+  - title (TEXT, NOT NULL)
+  - description (TEXT, NOT NULL)
+  - images (TEXT, NOT NULL)
+    Format: JSON array of image URLs
+  - pricePerNight (INTEGER, NOT NULL)
+    Format: Price in cents (USD)
+  - numGuests (INTEGER, NOT NULL)
+  - numBedrooms (INTEGER, NOT NULL)
+  - numBeds (INTEGER, NOT NULL)
+  - numBathrooms (INTEGER, NOT NULL)
+  - featured (INTEGER, BOOLEAN, DEFAULT 0)
+  - createdAt (INTEGER, NOT NULL)
+  - updatedAt (INTEGER, NOT NULL)
+
+Indexes:
+  - PRIMARY KEY on id
+  - INDEX on featured (for fast featured queries)
+  - INDEX on pricePerNight (for sorting/filtering)
+
+--------------------------------
+B.6 BOOKINGS TABLE
+--------------------------------
+
+Table Name: bookings
+Purpose: Store booking reservations
+
+Columns:
+  - id (INTEGER, PRIMARY KEY AUTOINCREMENT)
+  - userId (TEXT, NOT NULL)
+  - listingId (INTEGER, NOT NULL)
+  - checkIn (INTEGER, NOT NULL)
+    Format: Unix timestamp
+  - checkOut (INTEGER, NOT NULL)
+    Format: Unix timestamp
+  - numNights (INTEGER, NOT NULL)
+  - subtotal (INTEGER, NOT NULL)
+    Format: Price in cents
+  - tax (INTEGER, NOT NULL)
+    Format: Tax amount in cents
+  - total (INTEGER, NOT NULL)
+    Format: Total price in cents
+  - status (TEXT, NOT NULL, DEFAULT 'pending')
+    Values: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+  - paymentMethod (TEXT, NOT NULL)
+    Values: 'debit' | 'credit' | 'paypal'
+  - createdAt (INTEGER, NOT NULL)
+  - updatedAt (INTEGER, NOT NULL)
+
+Foreign Keys:
+  - userId REFERENCES user(id) ON DELETE CASCADE
+  - listingId REFERENCES listings(id) ON DELETE CASCADE
+
+Indexes:
+  - PRIMARY KEY on id
+  - INDEX on userId (user's bookings lookup)
+  - INDEX on listingId (listing bookings lookup)
+  - INDEX on status (filter by status)
+
+--------------------------------
+B.7 TRANSACTIONS TABLE
+--------------------------------
+
+Table Name: transactions
+Purpose: Track financial transactions and refunds
+
+Columns:
+  - id (INTEGER, PRIMARY KEY AUTOINCREMENT)
+  - bookingId (INTEGER, NOT NULL)
+  - userId (TEXT, NOT NULL)
+  - type (TEXT, NOT NULL)
+    Values: 'payment' | 'refund'
+  - amount (INTEGER, NOT NULL)
+    Format: Amount in cents
+  - paymentMethod (TEXT, NOT NULL)
+  - status (TEXT, NOT NULL, DEFAULT 'pending')
+    Values: 'pending' | 'completed' | 'failed'
+  - metadata (TEXT)
+    Format: JSON string
+  - createdAt (INTEGER, NOT NULL)
+  - updatedAt (INTEGER, NOT NULL)
+
+Foreign Keys:
+  - bookingId REFERENCES bookings(id) ON DELETE CASCADE
+  - userId REFERENCES user(id) ON DELETE CASCADE
+
+Indexes:
+  - PRIMARY KEY on id
+  - INDEX on bookingId
+  - INDEX on userId
+  - INDEX on type
+
+--------------------------------
+B.8 RELATIONSHIP DIAGRAM
+--------------------------------
+
+user (1) ----< (M) session
+  |
+  +----------< (M) account
+  |
+  +----------< (M) bookings ----< (M) transactions
+                      |
+                      +--------> (1) listings
+
+Legend:
+  1 = One
+  M = Many
+  ---< = One-to-Many relationship
+  ----> = Many-to-One relationship
+
+================================================================================
+                     APPENDIX C: API ENDPOINT SUMMARY
+================================================================================
+
+All API endpoints return JSON responses and require authentication where noted.
+
+--------------------------------
+C.1 AUTHENTICATION ENDPOINTS
+--------------------------------
+
+POST /api/auth/custom-register
+  Purpose: Register new user account
+  Auth: None
+  Body: { name, email, password }
+  Returns: { success, user, token }
+
+POST /api/auth/custom-login
+  Purpose: User login with email/password
+  Auth: None
+  Body: { email, password }
+  Returns: { success, user, token }
+
+GET /api/auth/verify-session
+  Purpose: Verify current session validity
+  Auth: Bearer token
+  Returns: { valid, user }
+
+--------------------------------
+C.2 USER MANAGEMENT
+--------------------------------
+
+GET /api/profile
+  Purpose: Get current user profile
+  Auth: Required
+  Returns: { id, name, email, role, createdAt }
+
+PUT /api/profile
+  Purpose: Update user profile
+  Auth: Required
+  Body: { name?, email?, image? }
+  Returns: { success, user }
+
+--------------------------------
+C.3 LISTINGS ENDPOINTS
+--------------------------------
+
+GET /api/listings
+  Purpose: Get all listings with filters
+  Auth: None
+  Query Params:
+    - search: string (search in title/description)
+    - featured: boolean (filter featured listings)
+    - minPrice: number (minimum price per night)
+    - maxPrice: number (maximum price per night)
+    - limit: number (results per page)
+    - offset: number (pagination offset)
+  Returns: Array of listing objects
+
+GET /api/listings/[id]
+  Purpose: Get single listing by ID
+  Auth: None
+  Returns: Listing object with full details
+
+POST /api/listings
+  Purpose: Create new listing (admin only)
+  Auth: Required (admin)
+  Body: {
+    title, description, images[],
+    pricePerNight, numGuests, numBedrooms,
+    numBeds, numBathrooms, featured
+  }
+  Returns: { success, listing }
+
+PUT /api/listings/[id]
+  Purpose: Update existing listing (admin only)
+  Auth: Required (admin)
+  Body: Same as POST (all fields optional)
+  Returns: { success, listing }
+
+DELETE /api/listings/[id]
+  Purpose: Delete listing (admin only)
+  Auth: Required (admin)
+  Returns: { success }
+
+--------------------------------
+C.4 BOOKINGS ENDPOINTS
+--------------------------------
+
+GET /api/bookings
+  Purpose: Get user's bookings or all (admin)
+  Auth: Required
+  Query Params:
+    - userId: string (admin only)
+    - status: string (filter by status)
+  Returns: Array of booking objects
+
+GET /api/bookings/[id]
+  Purpose: Get single booking details
+  Auth: Required (owner or admin)
+  Returns: Booking object with listing details
+
+POST /api/bookings
+  Purpose: Create new booking
+  Auth: Required
+  Body: {
+    listingId, checkIn, checkOut,
+    numNights, subtotal, tax, total,
+    paymentMethod
+  }
+  Returns: { success, booking }
+
+PUT /api/bookings/[id]
+  Purpose: Update booking status
+  Auth: Required (owner or admin)
+  Body: { status }
+  Returns: { success, booking }
+
+DELETE /api/bookings/[id]
+  Purpose: Cancel booking
+  Auth: Required (owner or admin)
+  Returns: { success }
+
+POST /api/bookings/[id]/refund
+  Purpose: Process refund for cancelled booking
+  Auth: Required (owner or admin)
+  Body: { reason? }
+  Returns: { success, transaction, booking }
+
+--------------------------------
+C.5 ADMIN ENDPOINTS
+--------------------------------
+
+GET /api/admin/users
+  Purpose: Get all users (admin only)
+  Auth: Required (admin)
+  Returns: Array of user objects
+
+PUT /api/admin/users/[id]
+  Purpose: Update user (promote to admin)
+  Auth: Required (admin)
+  Body: { role }
+  Returns: { success, user }
+
+POST /api/admin/migrate-users
+  Purpose: Migrate legacy users (one-time)
+  Auth: Required (admin)
+  Returns: { success, migratedCount }
+
+--------------------------------
+C.6 TRANSACTION ENDPOINTS
+--------------------------------
+
+GET /api/transactions
+  Purpose: Get user transactions
+  Auth: Required
+  Query Params:
+    - userId: string (admin only)
+    - type: 'payment' | 'refund'
+    - status: string
+  Returns: Array of transaction objects
+
+--------------------------------
+C.7 ERROR RESPONSES
+--------------------------------
+
+All endpoints may return standard error responses:
+
+400 Bad Request
+  { error: "Error message", details?: {} }
+
+401 Unauthorized
+  { error: "Authentication required" }
+
+403 Forbidden
+  { error: "Insufficient permissions" }
+
+404 Not Found
+  { error: "Resource not found" }
+
+500 Internal Server Error
+  { error: "Server error", message: "Details" }
+
+================================================================================
+                     APPENDIX D: DEPLOYMENT CHECKLIST
+================================================================================
+
+Pre-Deployment Checklist:
+
+□ Environment Configuration
+  □ All production environment variables set
+  □ Database connection tested
+  □ Authentication secrets generated and secure
+  □ Google OAuth credentials configured
+  
+□ Database
+  □ Production database created
+  □ Migrations applied
+  □ Initial seed data loaded
+  □ Backup strategy configured
+  
+□ Code Quality
+  □ All tests passing
+  □ No TypeScript errors
+  □ ESLint checks pass
+  □ Build completes successfully
+  
+□ Security
+  □ Secrets not committed to repository
+  □ CORS configured properly
+  □ Rate limiting enabled
+  □ Input validation in place
+  
+□ Performance
+  □ Images optimized
+  □ Code split appropriately
+  □ Caching strategies implemented
+  □ API response times acceptable
+  
+□ Monitoring
+  □ Error tracking configured
+  □ Analytics setup
+  □ Logging enabled
+  □ Performance monitoring active
+
+Deployment Steps:
+
+1. Commit and push all changes to main branch
+2. Verify build succeeds in Vercel dashboard
+3. Check production environment variables
+4. Run database migrations in production
+5. Test critical user flows in production
+6. Monitor error logs for first 24 hours
+7. Announce launch to stakeholders
+
+Post-Deployment:
+
+□ Verify all pages load correctly
+□ Test authentication flow end-to-end
+□ Create test booking in production
+□ Verify email notifications (if applicable)
+□ Check mobile responsiveness
+□ Monitor performance metrics
+□ Set up automated backups
+
+================================================================================
+                 APPENDIX E: COMMON ISSUES & TROUBLESHOOTING
+================================================================================
+
+--------------------------------
+E.1 DATABASE CONNECTION ISSUES
+--------------------------------
+
+Issue: "Failed to connect to database"
+Solutions:
+  1. Verify TURSO_DATABASE_URL is correct
+  2. Check TURSO_AUTH_TOKEN is valid and not expired
+  3. Ensure database is not suspended (free tier)
+  4. Test connection using drizzle-kit studio
+
+Issue: "Table does not exist"
+Solutions:
+  1. Run migrations: bun run db:push
+  2. Check drizzle.config.ts points to correct schema
+  3. Verify database URL in both .env and code
+
+--------------------------------
+E.2 AUTHENTICATION PROBLEMS
+--------------------------------
+
+Issue: "Session invalid" after login
+Solutions:
+  1. Clear browser cookies and localStorage
+  2. Verify BETTER_AUTH_SECRET is set
+  3. Check BETTER_AUTH_URL matches current domain
+  4. Inspect session table for valid records
+
+Issue: Google OAuth not working
+Solutions:
+  1. Verify redirect URIs in Google Console
+  2. Check GOOGLE_CLIENT_ID and SECRET are correct
+  3. Ensure callback URL is whitelisted
+  4. Test with different Google account
+
+--------------------------------
+E.3 BUILD AND DEPLOYMENT
+--------------------------------
+
+Issue: Build fails on Vercel
+Solutions:
+  1. Check for TypeScript errors locally
+  2. Verify all dependencies are in package.json
+  3. Check environment variables are set in Vercel
+  4. Review build logs for specific errors
+
+Issue: API routes return 500 errors
+Solutions:
+  1. Check server logs for error details
+  2. Verify database connection in production
+  3. Ensure all environment variables are set
+  4. Test API endpoints locally first
+
+--------------------------------
+E.4 PERFORMANCE ISSUES
+--------------------------------
+
+Issue: Slow page loads
+Solutions:
+  1. Enable Next.js image optimization
+  2. Implement proper caching headers
+  3. Use pagination for large data sets
+  4. Optimize database queries
+
+Issue: High database latency
+Solutions:
+  1. Use Turso in nearest region
+  2. Add database indexes for frequently queried columns
+  3. Implement query result caching
+  4. Review slow query logs
+
+================================================================================
+                  APPENDIX F: USER ROLES AND PERMISSIONS
+================================================================================
+
+--------------------------------
+F.1 USER ROLE (DEFAULT)
+--------------------------------
+
+Capabilities:
+  ✓ Browse listings
+  ✓ Search and filter properties
+  ✓ View property details
+  ✓ Create bookings
+  ✓ View own bookings
+  ✓ Cancel own bookings
+  ✓ Update own profile
+  ✓ View transactions
+
+Restrictions:
+  ✗ Cannot create listings
+  ✗ Cannot edit listings
+  ✗ Cannot delete listings
+  ✗ Cannot promote users
+  ✗ Cannot view all bookings
+  ✗ Cannot access admin dashboard
+
+--------------------------------
+F.2 ADMIN ROLE
+--------------------------------
+
+Capabilities:
+  ✓ All user capabilities PLUS:
+  ✓ Access admin dashboard
+  ✓ Create new listings
+  ✓ Edit any listing
+  ✓ Delete listings
+  ✓ View all bookings
+  ✓ View all users
+  ✓ Promote users to admin
+  ✓ Manage user accounts
+  ✓ View all transactions
+  ✓ Process refunds
+  ✓ Mark listings as featured
+
+Restrictions:
+  ✗ Cannot delete other admin accounts
+  ✗ Cannot demote self
+
+--------------------------------
+F.3 PERMISSION MATRIX
+--------------------------------
+
+Action                    | User | Admin
+--------------------------|------|-------
+View Listings             |  ✓   |   ✓
+Create Listing            |  ✗   |   ✓
+Edit Listing              |  ✗   |   ✓
+Delete Listing            |  ✗   |   ✓
+Create Booking            |  ✓   |   ✓
+View Own Bookings         |  ✓   |   ✓
+View All Bookings         |  ✗   |   ✓
+Cancel Own Booking        |  ✓   |   ✓
+Cancel Any Booking        |  ✗   |   ✓
+Process Refund            |  ✗   |   ✓
+View Own Profile          |  ✓   |   ✓
+Edit Own Profile          |  ✓   |   ✓
+View All Users            |  ✗   |   ✓
+Promote User              |  ✗   |   ✓
+Access Admin Dashboard    |  ✗   |   ✓
+
+================================================================================
+                   APPENDIX G: PRICING AND TAX CALCULATION
+================================================================================
+
+--------------------------------
+G.1 PRICING STRUCTURE
+--------------------------------
+
+Base Price:
+  - Listed as price per night in cents (USD)
+  - Example: $120.00 = 12000 cents
+
+Calculation Formula:
+  1. Subtotal = pricePerNight × numNights
+  2. Tax = subtotal × 0.10 (10%)
+  3. Total = subtotal + tax
+
+Example Calculation:
+  Property: $120/night
+  Duration: 3 nights
+  
+  Subtotal = 12000 × 3 = 36000 cents ($360.00)
+  Tax (10%) = 36000 × 0.10 = 3600 cents ($36.00)
+  Total = 36000 + 3600 = 39600 cents ($396.00)
+
+--------------------------------
+G.2 PAYMENT METHODS
+--------------------------------
+
+Supported Methods:
+  1. Debit Card
+  2. Credit Card
+  3. PayPal
+
+Note: Current implementation uses simulated payments.
+Future: Integrate with Stripe or PayPal SDK for real processing.
+
+--------------------------------
+G.3 REFUND POLICY
+--------------------------------
+
+Cancellation Windows:
+  - More than 7 days before check-in: 100% refund
+  - 3-7 days before check-in: 50% refund
+  - Less than 3 days before check-in: No refund
+
+Refund Processing:
+  1. User cancels booking
+  2. System calculates refund amount
+  3. Transaction record created with type='refund'
+  4. Booking status updated to 'cancelled'
+  5. Refund processed to original payment method
+
+Implementation:
+  POST /api/bookings/[id]/refund
+  - Creates refund transaction
+  - Updates booking status
+  - Records refund amount
+
+================================================================================
+                    APPENDIX H: RESPONSIVE BREAKPOINTS
+================================================================================
+
+Tailwind CSS Breakpoints Used:
+
+xs: 475px
+  - Extra small devices (large phones)
+  - Custom breakpoint added to theme
+
+sm: 640px
+  - Small devices (tablets)
+  - 2-column listing grid
+  - Stacked navigation
+
+md: 768px
+  - Medium devices (small laptops)
+  - 3-column listing grid
+  - Horizontal navigation
+
+lg: 1024px
+  - Large devices (desktops)
+  - 4-column listing grid
+  - Full navigation with all items
+
+xl: 1280px
+  - Extra large devices (large desktops)
+  - 5-column listing grid
+  - Maximum content width
+
+2xl: 1536px
+  - Extra extra large devices
+  - Maximum container width maintained
+
+--------------------------------
+RESPONSIVE STRATEGIES
+--------------------------------
+
+Mobile-First Approach:
+  - Base styles for mobile (< 640px)
+  - Progressive enhancement for larger screens
+  - Touch-friendly interactive elements
+
+Grid Layouts:
+  - 1 column: mobile (default)
+  - 2 columns: xs/sm breakpoint
+  - 3 columns: md breakpoint
+  - 4 columns: lg breakpoint
+  - 5 columns: xl breakpoint
+
+Navigation:
+  - Hamburger menu: mobile/tablet
+  - Full horizontal: desktop
+  - Sticky on scroll: all sizes
+
+Property Cards:
+  - Full width: mobile
+  - 2-up: small tablets
+  - 3-up: medium screens
+  - 4-5 up: large screens
+
+Forms:
+  - Single column: mobile
+  - Multi-column: desktop
+  - Touch-friendly inputs: all sizes
+
+================================================================================
+                    APPENDIX I: SECURITY BEST PRACTICES
+================================================================================
+
+--------------------------------
+I.1 AUTHENTICATION SECURITY
+--------------------------------
+
+Implemented Measures:
+  ✓ Password hashing with bcrypt (10 rounds)
+  ✓ Secure session tokens with expiration
+  ✓ JWT-based authentication
+  ✓ OAuth 2.0 for Google sign-in
+  ✓ CSRF protection
+  ✓ Session invalidation on logout
+
+Best Practices:
+  - Never store passwords in plain text
+  - Rotate authentication secrets regularly
+  - Use HTTPS in production only
+  - Implement rate limiting on auth endpoints
+  - Log authentication failures
+  - Require strong passwords (future enhancement)
+
+--------------------------------
+I.2 API SECURITY
+--------------------------------
+
+Implemented:
+  ✓ Bearer token authentication
+  ✓ Role-based access control
+  ✓ Input validation
+  ✓ SQL injection prevention (Drizzle ORM)
+  ✓ XSS prevention (React escaping)
+
+Recommendations:
+  - Implement rate limiting
+  - Add request size limits
+  - Validate all inputs server-side
+  - Sanitize user-generated content
+  - Use parameterized queries only
+
+--------------------------------
+I.3 DATA PROTECTION
+--------------------------------
+
+Measures:
+  ✓ Environment variables for secrets
+  ✓ Database access tokens
+  ✓ Encrypted connections (TLS)
+  ✓ No sensitive data in client code
+  ✓ Secure session storage
+
+Future Enhancements:
+  - PCI compliance for real payments
+  - Data encryption at rest
+  - Regular security audits
+  - Automated vulnerability scanning
+  - GDPR compliance features
+
+--------------------------------
+I.4 FRONTEND SECURITY
+--------------------------------
+
+Implemented:
+  ✓ No inline scripts (CSP ready)
+  ✓ React XSS protection
+  ✓ Secure HTTP headers
+  ✓ No sensitive data in localStorage
+  ✓ HTTPS-only cookies
+
+Best Practices:
+  - Never expose API keys in client code
+  - Validate user inputs
+  - Implement proper CORS
+  - Use security headers
+  - Regular dependency updates
+
+================================================================================
+                       APPENDIX J: FEATURE ROADMAP
+================================================================================
+
+--------------------------------
+PHASE 1: CORE FEATURES (COMPLETED)
+--------------------------------
+
+✓ User authentication (Google OAuth + Email/Password)
+✓ Property listing browsing and search
+✓ Property detail pages with image carousels
+✓ Booking system with payment flow
+✓ User profile and booking management
+✓ Admin dashboard for listing management
+✓ Responsive design for all devices
+✓ Database schema and API implementation
+
+--------------------------------
+PHASE 2: ENHANCEMENTS (PLANNED)
+--------------------------------
+
+Timeline: Q1 2026
+
+Features:
+□ Property Reviews and Ratings
+  - 5-star rating system
+  - Written reviews
+  - Host responses
+  - Review moderation
+
+□ Real Payment Integration
+  - Stripe payment processing
+  - Multiple currency support
+  - Secure payment storage
+  - Automated refund processing
+
+□ Email Notifications
+  - Booking confirmations
+  - Reminder emails
+  - Cancellation notifications
+  - Admin alerts
+
+□ Advanced Search Filters
+  - Location-based search
+  - Price range sliders
+  - Amenity filters
+  - Availability calendar
+
+□ Favorites/Wishlist
+  - Save favorite properties
+  - Share wishlists
+  - Price alerts
+
+--------------------------------
+PHASE 3: ADVANCED FEATURES
+--------------------------------
+
+Timeline: Q2-Q3 2026
+
+Features:
+□ Host Dashboard
+  - Property management
+  - Booking calendar
+  - Earnings reports
+  - Guest communication
+
+□ Messaging System
+  - Host-guest chat
+  - Pre-booking inquiries
+  - Booking-related messages
+  - Notification system
+
+□ Calendar Integration
+  - Availability management
+  - iCal sync
+  - Blocked dates
+  - Minimum stay rules
+
+□ Dynamic Pricing
+  - Seasonal pricing
+  - Weekend rates
+  - Last-minute discounts
+  - Special event pricing
+
+□ Map Integration
+  - Google Maps
+  - Property locations
+  - Nearby attractions
+  - Distance calculations
+
+--------------------------------
+PHASE 4: SCALE & OPTIMIZE
+--------------------------------
+
+Timeline: Q4 2026
+
+Features:
+□ Mobile Applications
+  - iOS native app
+  - Android native app
+  - Push notifications
+  - Offline mode
+
+□ Performance Optimization
+  - CDN integration
+  - Image optimization
+  - Caching strategies
+  - Database optimization
+
+□ Analytics Dashboard
+  - User behavior tracking
+  - Conversion metrics
+  - Revenue analytics
+  - Performance monitoring
+
+□ Multi-language Support
+  - Internationalization
+  - Multiple currencies
+  - Regional customization
+  - RTL language support
+
+□ Advanced Admin Tools
+  - User analytics
+  - Revenue reports
+  - Content moderation
+  - A/B testing tools
+
+================================================================================
+                     APPENDIX K: TESTING PROCEDURES
+================================================================================
+
+--------------------------------
+K.1 MANUAL TESTING CHECKLIST
+--------------------------------
+
+User Registration & Authentication:
+□ Register new account with email/password
+□ Login with existing account
+□ Login with Google OAuth
+□ Logout successfully
+□ Session persists across page refreshes
+□ Invalid credentials show error messages
+□ Password validation works
+
+Property Browsing:
+□ View all listings on homepage
+□ Search functionality works
+□ Filter by price works
+□ Click property to view details
+□ Image carousel functions properly
+□ All property details display correctly
+
+Booking Flow:
+□ Select check-in and check-out dates
+□ Price calculates correctly
+□ Tax calculation is accurate
+□ Payment method selection works
+□ Booking confirmation displays
+□ Booking appears in "My Bookings"
+
+User Profile:
+□ View profile information
+□ Update profile details
+□ Profile picture updates (if applicable)
+□ View booking history
+□ Cancel booking
+
+Admin Functions:
+□ Access admin dashboard (admin only)
+□ Create new listing
+□ Edit existing listing
+□ Delete listing
+□ Promote user to admin
+□ View all users
+□ View all bookings
+
+Responsive Design:
+□ Mobile view (< 640px)
+□ Tablet view (640px - 1024px)
+□ Desktop view (> 1024px)
+□ Touch interactions work
+□ Navigation adapts properly
+
+--------------------------------
+K.2 API TESTING
+--------------------------------
+
+Use curl or Postman to test:
+
+Authentication:
+POST /api/auth/custom-register
+POST /api/auth/custom-login
+GET /api/auth/verify-session
+
+Listings:
+GET /api/listings
+GET /api/listings/[id]
+POST /api/listings (admin)
+PUT /api/listings/[id] (admin)
+DELETE /api/listings/[id] (admin)
+
+Bookings:
+GET /api/bookings
+POST /api/bookings
+PUT /api/bookings/[id]
+POST /api/bookings/[id]/refund
+
+--------------------------------
+K.3 AUTOMATED TESTING (FUTURE)
+--------------------------------
+
+Unit Tests:
+- Component rendering
+- Utility functions
+- Validation logic
+- Price calculations
+
+Integration Tests:
+- API endpoint responses
+- Database operations
+- Authentication flow
+- Booking process
+
+End-to-End Tests:
+- Complete user flows
+- Critical business paths
+- Cross-browser testing
+- Mobile testing
+
+================================================================================
+                   APPENDIX L: PERFORMANCE OPTIMIZATION
+================================================================================
+
+--------------------------------
+L.1 CURRENT OPTIMIZATIONS
+--------------------------------
+
+Images:
+✓ Next.js Image component for automatic optimization
+✓ Lazy loading for off-screen images
+✓ Responsive images for different screen sizes
+✓ WebP format support
+
+Code Splitting:
+✓ Route-based code splitting (Next.js automatic)
+✓ Dynamic imports for heavy components
+✓ Tree shaking for unused code
+
+Caching:
+✓ Static page generation where possible
+✓ API response caching headers
+✓ Browser caching for assets
+
+Database:
+✓ Indexes on frequently queried columns
+✓ Efficient query patterns with Drizzle ORM
+✓ Connection pooling
+
+--------------------------------
+L.2 PERFORMANCE METRICS
+--------------------------------
+
+Target Metrics:
+- First Contentful Paint: < 1.8s
+- Time to Interactive: < 3.5s
+- Largest Contentful Paint: < 2.5s
+- Cumulative Layout Shift: < 0.1
+- First Input Delay: < 100ms
+
+Monitoring Tools:
+- Vercel Analytics
+- Lighthouse CI
+- Web Vitals
+- Real User Monitoring (RUM)
+
+--------------------------------
+L.3 FUTURE OPTIMIZATIONS
+--------------------------------
+
+□ Implement service workers for offline support
+□ Add Redis cache for frequently accessed data
+□ Optimize database queries with query analysis
+□ Implement CDN for static assets
+□ Add skeleton screens for loading states
+□ Optimize bundle size further
+□ Implement progressive image loading
+□ Add resource hints (prefetch, preconnect)
+
+================================================================================
+                    APPENDIX M: MAINTENANCE GUIDELINES
+================================================================================
+
+--------------------------------
+M.1 REGULAR MAINTENANCE TASKS
+--------------------------------
+
+Daily:
+□ Monitor error logs
+□ Check application uptime
+□ Review database performance
+□ Verify backup completion
+
+Weekly:
+□ Review user feedback
+□ Check for security updates
+□ Monitor database size
+□ Review API performance metrics
+
+Monthly:
+□ Update dependencies
+□ Security audit
+□ Performance review
+□ Backup verification
+□ Review and rotate secrets
+
+Quarterly:
+□ Major dependency updates
+□ Feature usage analysis
+□ Cost optimization review
+□ Disaster recovery test
+□ Documentation update
+
+--------------------------------
+M.2 DEPENDENCY UPDATES
+--------------------------------
+
+Process:
+1. Check for available updates: bun outdated
+2. Review changelog for breaking changes
+3. Update in development environment
+4. Run full test suite
+5. Test critical user flows manually
+6. Deploy to staging for validation
+7. Deploy to production with monitoring
+
+Priority:
+- Critical security updates: Immediate
+- Major framework updates: Quarterly
+- Minor updates: Monthly
+- Patch updates: Bi-weekly
+
+--------------------------------
+M.3 BACKUP STRATEGY
+--------------------------------
+
+Database Backups:
+- Frequency: Daily automated backups
+- Retention: 30 days
+- Storage: Turso automatic backups
+- Testing: Monthly restore tests
+
+Code Repository:
+- Version control: Git
+- Remote: GitHub
+- Branches: main (production), develop
+- Tags: Version releases
+
+Environment Configuration:
+- Backup: Encrypted secure storage
+- Access: Limited to admins
+- Rotation: Quarterly secret rotation
+
+================================================================================
+                APPENDIX N: SUPPORT AND CONTACT INFORMATION
+================================================================================
+
+--------------------------------
+N.1 PROJECT INFORMATION
+--------------------------------
+
+Project Name: StayFinder
+Version: 1.0.0
+Platform: Web Application
+Technology: Next.js 15, React 19, TypeScript
+Live URL: https://stayfinder-tan.vercel.app/
+
+--------------------------------
+N.2 DEVELOPMENT TEAM
+--------------------------------
+
+Project Type: Portfolio/Demo Application
+Development Environment: Vercel + Turso
+Repository: Private/Portfolio project
+
+--------------------------------
+N.3 USER SUPPORT
+--------------------------------
+
+For Users:
+- Contact form available on website
+- Email: support@stayfinder.com (demo)
+- Business hours: Monday-Friday, 9 AM - 6 PM PST
+
+For Developers:
+- Documentation: PROJECT_DOCUMENTATION.md
+- Source code reference: STAYFINDER_SOURCE_CODE.md
+- API documentation: See Appendix C
+
+--------------------------------
+N.4 TECHNICAL SUPPORT
+--------------------------------
+
+Platform Issues:
+- Vercel Status: https://vercel-status.com
+- Turso Status: https://status.turso.tech
+
+Framework Documentation:
+- Next.js: https://nextjs.org/docs
+- React: https://react.dev
+- Drizzle ORM: https://orm.drizzle.team
+
+Community Resources:
+- Stack Overflow: Tag [nextjs], [react]
+- GitHub Discussions: Framework-specific
+- Discord: Next.js, React communities
+
+--------------------------------
+N.5 REPORTING ISSUES
+--------------------------------
+
+Bug Reports Should Include:
+1. Clear description of the issue
+2. Steps to reproduce
+3. Expected vs actual behavior
+4. Browser and device information
+5. Screenshots or error messages
+6. Console logs (if applicable)
+
+Security Issues:
+- Do not report publicly
+- Contact project maintainers directly
+- Include detailed reproduction steps
+- Proof of concept if available
+
+Feature Requests:
+- Describe the use case
+- Explain expected behavior
+- Provide examples or mockups
+- Consider implementation complexity
+
+================================================================================
+                         DOCUMENT VERSION CONTROL
+================================================================================
+
+Document: StayFinder Project Appendices
+Version: 1.0
+Created: November 26, 2025
+Last Updated: November 26, 2025
+Maintained By: StayFinder Development Team
+
+Change Log:
+- v1.0 (Nov 26, 2025): Initial comprehensive appendices document
+
+================================================================================
+                           END OF APPENDICES
+================================================================================
