@@ -35,8 +35,13 @@ export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
+    // Check initial dark mode state
+    const darkMode = document.documentElement.classList.contains('dark');
+    setIsDark(darkMode);
+
     const checkAuth = async () => {
       const sessionToken = localStorage.getItem('session_token');
       
@@ -75,6 +80,19 @@ export default function Navbar() {
     checkAuth();
   }, []);
 
+  const toggleDarkMode = () => {
+    const html = document.documentElement;
+    if (html.classList.contains('dark')) {
+      html.classList.remove('dark');
+      setIsDark(false);
+      toast.success('Light mode enabled');
+    } else {
+      html.classList.add('dark');
+      setIsDark(true);
+      toast.success('Dark mode enabled');
+    }
+  };
+
   const handleSignOut = () => {
     localStorage.removeItem('session_token');
     localStorage.removeItem('user_data');
@@ -86,15 +104,19 @@ export default function Navbar() {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <nav className="w-full border-b bg-white sticky top-0 z-50">
+    <nav className="w-full border-b bg-white dark:bg-card sticky top-0 z-50">
       <div className="max-w-[90vw] lg:max-w-[70vw] mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-primary">
+          {/* Logo - Dark Mode Toggle Button */}
+          <button 
+            onClick={toggleDarkMode}
+            className="flex items-center gap-2 text-xl md:text-2xl font-bold text-primary hover:opacity-80 transition-opacity"
+            aria-label="Toggle dark mode"
+          >
             <Home className="w-6 h-6 md:w-8 md:h-8" />
             <span className="hidden sm:inline">StayFinder</span>
             <span className="sm:hidden">SF</span>
-          </Link>
+          </button>
 
           {/* Desktop Navigation Links - Hidden on mobile */}
           <div className="hidden md:flex items-center gap-6 lg:gap-8">
