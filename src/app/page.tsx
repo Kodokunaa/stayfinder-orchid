@@ -123,7 +123,7 @@ export default function HomePage() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: 'url(https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/06633472-0c0a-485a-9c4c-86a619f3dbf8/generated_images/wide-panoramic-view-of-a-beautiful-coast-d177d54a-20251230045349.jpg)'
+            backgroundImage: 'url(https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/06633472-0c0a-485a-9c4c-86a619f3dbf8/generated_images/wide-panoramic-photograph-of-a-stunning--9ed6c144-20251130045539.jpg)'
           }}
         />
         
