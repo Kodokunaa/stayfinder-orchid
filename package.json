@@ -8,7 +8,8 @@
         "start": "next start",
         "lint": "next lint",
         "db:push": "drizzle-kit push",
-        "db:studio": "drizzle-kit studio"
+        "db:studio": "drizzle-kit studio",
+        "db:seed": "tsx src/db/seeds/index.ts"
     },
     "dependencies": {
         "@babel/parser": "^7.28.5",

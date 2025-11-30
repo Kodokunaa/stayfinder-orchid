@@ -1,95 +1,65 @@
 import { db } from '@/db';
 import { users } from '@/db/schema';
+import bcrypt from 'bcrypt';
 
 async function main() {
+    const hashedPassword = await bcrypt.hash('password123', 10);
+    
     const sampleUsers = [
         {
-            email: 'admin@rentalplatform.com',
-            firstName: 'Sarah',
-            lastName: 'Admin',
-            password: 'hashed_password_here',
+            email: 'admin@stayfinder.com',
+            firstName: 'Admin',
+            lastName: 'User',
+            password: hashedPassword,
             role: 'admin',
-            createdAt: new Date('2023-08-15').toISOString(),
+            profilePicture: null,
+            createdAt: new Date('2024-01-01'),
         },
         {
-            email: 'admin.support@rentalplatform.com',
-            firstName: 'Michael',
-            lastName: 'Thompson',
-            password: 'hashed_password_here',
-            role: 'admin',
-            createdAt: new Date('2023-09-01').toISOString(),
-        },
-        {
-            email: 'james.martinez@gmail.com',
-            firstName: 'James',
-            lastName: 'Martinez',
-            password: 'hashed_password_here',
+            email: 'john.doe@example.com',
+            firstName: 'John',
+            lastName: 'Doe',
+            password: hashedPassword,
             role: 'renter',
-            createdAt: new Date('2023-10-12').toISOString(),
+            profilePicture: null,
+            createdAt: new Date('2024-01-05'),
         },
         {
-            email: 'emily.chen@outlook.com',
-            firstName: 'Emily',
-            lastName: 'Chen',
-            password: 'hashed_password_here',
+            email: 'jane.smith@example.com',
+            firstName: 'Jane',
+            lastName: 'Smith',
+            password: hashedPassword,
             role: 'renter',
-            createdAt: new Date('2023-11-05').toISOString(),
+            profilePicture: null,
+            createdAt: new Date('2024-01-10'),
         },
         {
-            email: 'david.johnson@email.com',
-            firstName: 'David',
+            email: 'mike.johnson@example.com',
+            firstName: 'Mike',
             lastName: 'Johnson',
-            password: 'hashed_password_here',
+            password: hashedPassword,
             role: 'renter',
-            createdAt: new Date('2023-11-18').toISOString(),
+            profilePicture: null,
+            createdAt: new Date('2024-01-15'),
         },
         {
-            email: 'maria.garcia@yahoo.com',
-            firstName: 'Maria',
-            lastName: 'Garcia',
-            password: 'hashed_password_here',
-            role: 'renter',
-            createdAt: new Date('2023-12-03').toISOString(),
-        },
-        {
-            email: 'robert.patel@gmail.com',
-            firstName: 'Robert',
-            lastName: 'Patel',
-            password: 'hashed_password_here',
-            role: 'renter',
-            createdAt: new Date('2023-12-20').toISOString(),
-        },
-        {
-            email: 'jessica.williams@outlook.com',
-            firstName: 'Jessica',
+            email: 'sarah.williams@example.com',
+            firstName: 'Sarah',
             lastName: 'Williams',
-            password: 'hashed_password_here',
+            password: hashedPassword,
             role: 'renter',
-            createdAt: new Date('2024-01-08').toISOString(),
-        },
-        {
-            email: 'ahmed.hassan@email.com',
-            firstName: 'Ahmed',
-            lastName: 'Hassan',
-            password: 'hashed_password_here',
-            role: 'renter',
-            createdAt: new Date('2024-01-25').toISOString(),
-        },
-        {
-            email: 'sophia.nguyen@gmail.com',
-            firstName: 'Sophia',
-            lastName: 'Nguyen',
-            password: 'hashed_password_here',
-            role: 'renter',
-            createdAt: new Date('2024-02-10').toISOString(),
+            profilePicture: null,
+            createdAt: new Date('2024-01-20'),
         },
     ];
 
     await db.insert(users).values(sampleUsers);
     
     console.log('✅ Users seeder completed successfully');
+    console.log('📝 Default password for all users: password123');
 }
 
 main().catch((error) => {
     console.error('❌ Seeder failed:', error);
+    process.exit(1);
 });
