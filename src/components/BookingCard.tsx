@@ -91,7 +91,7 @@ export default function BookingCard({ booking, onCancel, onRefresh }: BookingCar
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-gray-900">
-                ${(booking.total / 100).toFixed(2)}
+                ₱{(booking.total / 100).toFixed(2)}
               </div>
               <div className="text-sm text-gray-600">Total</div>
             </div>
@@ -128,7 +128,7 @@ export default function BookingCard({ booking, onCancel, onRefresh }: BookingCar
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="text-sm text-gray-600">
               {booking.numNights} night{booking.numNights > 1 ? 's' : ''} • 
-              ${booking.listing?.pricePerNight} per night
+              ₱{booking.listing?.pricePerNight} per night
             </div>
             
             <div className="flex gap-2">

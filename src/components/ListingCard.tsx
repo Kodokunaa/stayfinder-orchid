@@ -62,7 +62,7 @@ export default function ListingCard({
             </div>
           </div>
           <div className="text-lg font-bold text-primary">
-            ${pricePerNight}
+            ₱{pricePerNight}
             <span className="text-sm font-normal text-gray-600"> / night</span>
           </div>
         </CardContent>

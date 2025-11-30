@@ -161,7 +161,7 @@ export default function ListingManagement() {
                     <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{listing.title}</h3>
                     <p className="text-sm text-gray-600 line-clamp-2 mb-2">{listing.description}</p>
                     <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
-                      <span>${listing.pricePerNight}/night</span>
+                      <span>₱{listing.pricePerNight}/night</span>
                       <span className="hidden sm:inline">•</span>
                       <span>{listing.numGuests} guests</span>
                       <span className="hidden sm:inline">•</span>

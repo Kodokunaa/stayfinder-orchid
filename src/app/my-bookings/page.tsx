@@ -360,7 +360,7 @@ export default function MyBookingsPage() {
                           <div className={`text-lg sm:text-2xl font-bold ${
                             transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
                           }`}>
-                            {transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount / 100).toFixed(2)}
+                            {transaction.amount < 0 ? '-' : '+'}₱{Math.abs(transaction.amount / 100).toFixed(2)}
                           </div>
                           <div className="text-xs text-gray-500 capitalize">
                             {transaction.type}

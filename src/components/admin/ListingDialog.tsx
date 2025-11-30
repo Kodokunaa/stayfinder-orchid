@@ -192,7 +192,7 @@ export default function ListingDialog({ open, onClose, listing }: ListingDialogP
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="pricePerNight" className="text-sm">Price per Night ($)</Label>
+              <Label htmlFor="pricePerNight" className="text-sm">Price per Night (₱)</Label>
               <Input
                 id="pricePerNight"
                 type="number"
