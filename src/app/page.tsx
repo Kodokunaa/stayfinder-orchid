@@ -118,13 +118,25 @@ export default function HomePage() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary/10 via-background to-primary/5 min-h-[50vh] sm:min-h-[60vh] flex items-center">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <section className="relative min-h-[50vh] sm:min-h-[60vh] flex items-center overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/06633472-0c0a-485a-9c4c-86a619f3dbf8/generated_images/wide-panoramic-view-of-a-beautiful-coast-d177d54a-20251230045349.jpg)'
+          }}
+        />
+        
+        {/* Overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/40" />
+        
+        {/* Content */}
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="max-w-3xl mx-auto text-center space-y-6 sm:space-y-8">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg">
               Find Your Perfect Stay
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 drop-shadow-md">
               Discover unique homes and experiences around the world
             </p>
             
@@ -135,30 +147,30 @@ export default function HomePage() {
 
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 pt-6 sm:pt-8">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <div className="text-xl sm:text-2xl font-bold">500+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Locations</div>
+                  <div className="text-xl sm:text-2xl font-bold text-white drop-shadow-md">500+</div>
+                  <div className="text-xs sm:text-sm text-white/90 drop-shadow-sm">Locations</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Home className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Home className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <div className="text-xl sm:text-2xl font-bold">1000+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Properties</div>
+                  <div className="text-xl sm:text-2xl font-bold text-white drop-shadow-md">1000+</div>
+                  <div className="text-xs sm:text-sm text-white/90 drop-shadow-sm">Properties</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <div className="text-xl sm:text-2xl font-bold">50K+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Happy Guests</div>
+                  <div className="text-xl sm:text-2xl font-bold text-white drop-shadow-md">50K+</div>
+                  <div className="text-xs sm:text-sm text-white/90 drop-shadow-sm">Happy Guests</div>
                 </div>
               </div>
             </div>
