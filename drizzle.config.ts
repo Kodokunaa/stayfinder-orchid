@@ -1,16 +1,14 @@
+
 import { defineConfig } from 'drizzle-kit';
 import type { Config } from 'drizzle-kit';
 
 const dbConfig: Config = defineConfig({
   schema: './src/db/schema.ts',
   out: './drizzle',
-  dialect: 'mysql',
+  dialect: 'turso',
   dbCredentials: {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306'),
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stayfinder',
+    url: process.env.TURSO_CONNECTION_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
   },
 });
 
