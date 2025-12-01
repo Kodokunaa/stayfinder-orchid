@@ -6,7 +6,10 @@
         "dev": "next dev --turbopack",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "db:studio": "drizzle-kit studio",
+        "db:push": "drizzle-kit push",
+        "db:migrate": "drizzle-kit migrate"
     },
     "dependencies": {
         "@babel/parser": "^7.28.5",
