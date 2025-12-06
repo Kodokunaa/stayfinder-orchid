@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
-const LOADER = path.resolve(__dirname, 'src/visual-edits/component-tagger-loader.js');
+// Only use custom loader in local development (not in CI/CD or Vercel builds)
+const isLocalDev = process.env.NODE_ENV === 'development' && !process.env.VERCEL && !process.env.CI;
 
 const nextConfig: NextConfig = {
   images: {
@@ -20,15 +21,12 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // Only apply Turbopack loader in development mode
-  ...(process.env.NODE_ENV === 'development' && {
+  // Only apply Turbopack rules in local development
+  ...(isLocalDev && {
     turbopack: {
       rules: {
         "*.{jsx,tsx}": {
-          loaders: [LOADER]
+          loaders: [path.resolve(__dirname, 'src/visual-edits/component-tagger-loader.js')]
         }
       }
     }
