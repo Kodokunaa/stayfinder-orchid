@@ -23,13 +23,16 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  turbopack: {
-    rules: {
-      "*.{jsx,tsx}": {
-        loaders: [LOADER]
+  // Only apply Turbopack loader in development mode
+  ...(process.env.NODE_ENV === 'development' && {
+    turbopack: {
+      rules: {
+        "*.{jsx,tsx}": {
+          loaders: [LOADER]
+        }
       }
     }
-  }
+  })
 };
 
 export default nextConfig;
